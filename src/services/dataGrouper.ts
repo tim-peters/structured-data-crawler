@@ -6,30 +6,35 @@ export function groupStructuredData(items: StructuredDataItem[]): StructuredData
   
   // First pass: create groups and build ID to hash mapping
   items.forEach(item => {
-    if (item.id) {
-      idToHashMap.set(item.id, item.hash);
+  // Prefer @id if present, otherwise use id
+  const canonicalId = item.data['@id'] || item.id;
+  if (canonicalId) {
+    // Only overwrite if not already mapped to this hash
+    if (!idToHashMap.has(canonicalId) || idToHashMap.get(canonicalId) === item.hash) {
+      idToHashMap.set(canonicalId, item.hash);
     }
-    
-    if (!groups.has(item.hash)) {
-      groups.set(item.hash, {
-        hash: item.hash,
-        items: [],
-        type: item.type,
-        format: item.format,
-        connections: [],
-        duplicateCount: 0
-      });
-    }
-    
-    const group = groups.get(item.hash)!;
-    group.items.push(item);
-    group.duplicateCount = group.items.length;
-    
-    // Update format if we have mixed formats in the same group
-    if (group.format !== item.format) {
-      group.format = 'Mixed';
-    }
-  });
+  }
+
+  if (!groups.has(item.hash)) {
+    groups.set(item.hash, {
+      hash: item.hash,
+      items: [],
+      type: item.type,
+      format: item.format,
+      connections: [],
+      duplicateCount: 0
+    });
+  }
+
+  const group = groups.get(item.hash)!;
+  group.items.push(item);
+  group.duplicateCount = group.items.length;
+
+  // Update format if we have mixed formats in the same group
+  if (group.format !== item.format) {
+    group.format = 'Mixed';
+  }
+});
   
   // Second pass: find connections
   groups.forEach(group => {
