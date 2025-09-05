@@ -71,16 +71,19 @@ function findConnections(item: StructuredDataItem, idToHashMap: Map<string, stri
     if (typeof obj === 'string') {
       // Check if this looks like an ID reference
       if (idToHashMap.has(obj)) {
-        const connectionKey = `${determineConnectionType(path)}-${obj}-${path}`;
-        if (!seenConnections.has(connectionKey)) {
-          seenConnections.add(connectionKey);
-          connections.push({
-            type: determineConnectionType(path),
-            targetId: obj,
-            targetHash: idToHashMap.get(obj),
-            property: path,
-            value: obj
-          });
+        const targetHash = idToHashMap.get(obj);
+          if (targetHash !== item.hash) {
+          const connectionKey = `${determineConnectionType(path)}-${obj}-${path}`;
+          if (!seenConnections.has(connectionKey)) {
+            seenConnections.add(connectionKey);
+            connections.push({
+              type: determineConnectionType(path),
+              targetId: obj,
+              targetHash: idToHashMap.get(obj),
+              property: path,
+              value: obj
+            });
+          }
         }
       }
     } else if (Array.isArray(obj)) {
