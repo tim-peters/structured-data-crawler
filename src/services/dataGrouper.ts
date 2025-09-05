@@ -3,11 +3,30 @@ import { StructuredDataItem, StructuredDataGroup, Connection } from '../types/cr
 export function groupStructuredData(items: StructuredDataItem[]): StructuredDataGroup[] {
   const groups = new Map<string, StructuredDataGroup>();
   const idToHashMap = new Map<string, string>();
+  const urlToHashMap = new Map<string, string>();
   
   // First pass: create groups and build ID to hash mapping
   items.forEach(item => {
     if (item.id) {
       idToHashMap.set(item.id, item.hash);
+    }
+    
+    // Also map URLs to hashes for better connection detection
+    urlToHashMap.set(item.url, item.hash);
+    
+    // Extract @id from nested data structures
+    if (item.data && typeof item.data === 'object') {
+      const extractIds = (obj: any, path: string = '') => {
+        if (typeof obj === 'object' && obj !== null) {
+          if (obj['@id']) {
+            idToHashMap.set(obj['@id'], item.hash);
+          }
+          Object.entries(obj).forEach(([key, value]) => {
+            extractIds(value, path ? `${path}.${key}` : key);
+          });
+        }
+      };
+      extractIds(item.data);
     }
     
     if (!groups.has(item.hash)) {
@@ -33,13 +52,13 @@ export function groupStructuredData(items: StructuredDataItem[]): StructuredData
   
   // Second pass: find connections
   groups.forEach(group => {
-    group.connections = findConnections(group.items[0], idToHashMap);
+    group.connections = findConnections(group.items[0], idToHashMap, urlToHashMap);
   });
   
   return Array.from(groups.values()).sort((a, b) => b.duplicateCount - a.duplicateCount);
 }
 
-function findConnections(item: StructuredDataItem, idToHashMap: Map<string, string>): Connection[] {
+function findConnections(item: StructuredDataItem, idToHashMap: Map<string, string>, urlToHashMap: Map<string, string>): Connection[] {
   const connections: Connection[] = [];
   const seenConnections = new Set<string>();
   const data = item.data;
@@ -47,20 +66,60 @@ function findConnections(item: StructuredDataItem, idToHashMap: Map<string, stri
   // Helper function to check for references in any value
   const checkForReferences = (obj: any, path: string = '') => {
     if (typeof obj === 'string') {
-      // Check if this looks like an ID reference
+      // Check if this looks like an ID reference or URL reference
+      let targetHash: string | undefined;
+      let targetId = obj;
+      
       if (idToHashMap.has(obj)) {
+        targetHash = idToHashMap.get(obj);
+      } else if (urlToHashMap.has(obj)) {
+        targetHash = urlToHashMap.get(obj);
+      }
+      
+      if (targetHash && targetHash !== item.hash) {
         const connectionKey = `${determineConnectionType(path)}-${obj}-${path}`;
         if (!seenConnections.has(connectionKey)) {
           seenConnections.add(connectionKey);
-        connections.push({
-          type: determineConnectionType(path),
-          targetId: obj,
-          targetHash: idToHashMap.get(obj),
-          property: path,
-          value: obj
-        });
+          connections.push({
+            type: determineConnectionType(path),
+            targetId: targetId,
+            targetHash: targetHash,
+            property: path,
+            value: obj
+          });
         }
       }
+    } else if (obj && typeof obj === 'object' && obj['@id']) {
+      // Handle objects with @id properties (like author objects)
+      const id = obj['@id'];
+      let targetHash: string | undefined;
+      
+      if (idToHashMap.has(id)) {
+        targetHash = idToHashMap.get(id);
+      } else if (urlToHashMap.has(id)) {
+        targetHash = urlToHashMap.get(id);
+      }
+      
+      if (targetHash && targetHash !== item.hash) {
+        const connectionKey = `${determineConnectionType(path)}-${id}-${path}`;
+        if (!seenConnections.has(connectionKey)) {
+          seenConnections.add(connectionKey);
+          connections.push({
+            type: determineConnectionType(path),
+            targetId: id,
+            targetHash: targetHash,
+            property: path,
+            value: id
+          });
+        }
+      }
+      
+      // Continue checking other properties of the object
+      Object.entries(obj).forEach(([key, value]) => {
+        if (key !== '@id') {
+          checkForReferences(value, `${path}.${key}`);
+        }
+      });
     } else if (Array.isArray(obj)) {
       obj.forEach((item, index) => {
         checkForReferences(item, `${path}[${index}]`);
@@ -76,7 +135,7 @@ function findConnections(item: StructuredDataItem, idToHashMap: Map<string, stri
   // Look for common reference patterns
   const referencePatterns = [
     '@id', 'id', 'sameAs', 'mainEntity', 'about', 'author', 'publisher',
-    'mainEntityOfPage', 'url', 'itemid', 'resource', 'isPartOf', 'hasPart',
+    'mainEntityOfPage', 'url', 'itemid', 'resource', 'isPartOf', 'hasPart', 'creator',
     'mentions', 'citation', 'workExample', 'exampleOfWork'
   ];
   
@@ -100,6 +159,7 @@ function determineConnectionType(property: string): Connection['type'] {
   if (lowerProp.includes('about')) return 'about';
   if (lowerProp.includes('author')) return 'author';
   if (lowerProp.includes('publisher')) return 'publisher';
+  if (lowerProp.includes('creator')) return 'author';
   
   return 'reference';
 }
