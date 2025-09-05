@@ -11,22 +11,71 @@ import {
   Globe, 
   Database,
   GitBranch,
-  Users
+  Users,
+  ExternalLink
 } from 'lucide-react';
 
 interface StructuredDataGroupCardProps {
   group: StructuredDataGroup;
   allGroups: StructuredDataGroup[];
+  currentFormatFilter?: string;
 }
 
-export function StructuredDataGroupCard({ group, allGroups }: StructuredDataGroupCardProps) {
+export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter = 'all' }: StructuredDataGroupCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showConnections, setShowConnections] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const relatedGroups = findRelatedGroups(group, allGroups);
+  const allRelatedGroups = findRelatedGroups(group, allGroups);
+  const relatedGroups = currentFormatFilter === 'all' 
+    ? allRelatedGroups 
+    : allRelatedGroups.filter(relatedGroup => relatedGroup.format === currentFormatFilter);
   const uniqueUrls = [...new Set(group.items.map(item => item.url))];
 
+  // Helper function to extract descriptive name from structured data
+  const getDescriptiveName = (group: StructuredDataGroup): string => {
+    if (!group.items || group.items.length === 0) return '';
+    
+    const data = group.items[0].data;
+    
+    // Try different common attributes in order of preference
+    const candidates = [
+      data.title,
+      data.name,
+      data.headline,
+      data['og:title'],
+      data['twitter:title'],
+      data.label,
+      data.description?.substring(0, 50),
+      data['og:description']?.substring(0, 50),
+      data.url,
+      data['@id']
+    ];
+    
+    // Find the first non-empty candidate
+    for (const candidate of candidates) {
+      if (candidate && typeof candidate === 'string' && candidate.trim()) {
+        return candidate.trim();
+      }
+    }
+    
+    // For nested objects, try to extract from mainEntity or similar
+    if (data.mainEntity) {
+      const nestedCandidates = [
+        data.mainEntity.name,
+        data.mainEntity.title,
+        data.mainEntity.headline
+      ];
+      
+      for (const candidate of nestedCandidates) {
+        if (candidate && typeof candidate === 'string' && candidate.trim()) {
+          return candidate.trim();
+        }
+      }
+    }
+    
+    return '';
+  };
   const formatBadgeColor = (format: string) => {
     const colors = {
       'JSON-LD': 'bg-blue-100 text-blue-800',
@@ -79,7 +128,10 @@ export function StructuredDataGroupCard({ group, allGroups }: StructuredDataGrou
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+    <div 
+      id={`group-${group.hash}`}
+      className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
+    >
       {/* Group Header */}
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-start justify-between mb-4">
@@ -264,29 +316,41 @@ export function StructuredDataGroupCard({ group, allGroups }: StructuredDataGrou
             Related Groups ({relatedGroups.length})
           </h5>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {relatedGroups.map((relatedGroup) => (
-              <div
-                key={relatedGroup.hash}
-                className="bg-white rounded-lg p-3 border border-blue-200"
-              >
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedGroup.format)}`}>
-                    {relatedGroup.format}
-                  </span>
-                  {relatedGroup.type && (
-                    <span className="text-xs text-slate-600">{relatedGroup.type}</span>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 font-mono">
-                  Hash: {relatedGroup.hash}
-                </p>
-                {relatedGroup.duplicateCount > 1 && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    {relatedGroup.duplicateCount} duplicates
+            {relatedGroups.map((relatedGroup) => {
+              const descriptiveName = getDescriptiveName(relatedGroup);
+              return (
+                <a
+                  href={`#group-${relatedGroup.hash}`}
+                  key={relatedGroup.hash}
+                  className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedGroup.format)}`}>
+                        {relatedGroup.format}
+                      </span>
+                      {relatedGroup.type && (
+                        <span className="text-xs text-slate-600">{relatedGroup.type}</span>
+                      )}
+                    </div>
+                    {descriptiveName && (
+                      <p className="text-sm font-medium text-slate-800 mb-1 line-clamp-2">
+                        {descriptiveName.length > 60 ? `${descriptiveName.substring(0, 60)}...` : descriptiveName}
+                      </p>
+                    )}
+                    <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                  </div>
+                  <p className="text-xs text-slate-500 font-mono">
+                    Hash: {relatedGroup.hash}
                   </p>
-                )}
-              </div>
-            ))}
+                  {relatedGroup.duplicateCount > 1 && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      {relatedGroup.duplicateCount} duplicates
+                    </p>
+                  )}
+                </a>
+              );
+            })}
           </div>
         </div>
       )}

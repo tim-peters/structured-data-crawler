@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { StructuredDataItem, StructuredDataGroup } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
 import { StructuredDataGroupCard } from './StructuredDataGroupCard';
-import { Filter, Search, Download, Eye, Group, List } from 'lucide-react';
+import { Filter, Search, Download, Eye, Group, List, TreePine } from 'lucide-react';
 
 interface CrawlerResultsProps {
   data: StructuredDataItem[];
@@ -13,7 +13,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedFormat, setSelectedFormat] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grouped' | 'individual'>('grouped');
+  const [viewMode, setViewMode] = useState<'grouped' | 'individual' | 'hierarchy'>('grouped');
 
   // Get unique types and formats
   const { types, formats } = useMemo(() => {
@@ -63,6 +63,21 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
     });
   }, [groupedData, searchTerm, selectedType, selectedFormat]);
 
+  // Create hierarchical view data
+  const hierarchicalData = useMemo(() => {
+    const hierarchy: { [key: string]: StructuredDataGroup[] } = {};
+    
+    filteredGroupedData.forEach(group => {
+      const key = `${group.format} - ${group.type || 'Unknown'}`;
+      if (!hierarchy[key]) {
+        hierarchy[key] = [];
+      }
+      hierarchy[key].push(group);
+    });
+    
+    return Object.entries(hierarchy).sort(([a], [b]) => a.localeCompare(b));
+  }, [filteredGroupedData]);
+
   const exportData = () => {
     const exportObj = {
       crawledAt: new Date().toISOString(),
@@ -111,6 +126,17 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
             >
               <Group className="w-4 h-4" />
               <span>Grouped</span>
+            </button>
+            <button
+              onClick={() => setViewMode('hierarchy')}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'hierarchy'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <TreePine className="w-4 h-4" />
+              <span>Hierarchy</span>
             </button>
             <button
               onClick={() => setViewMode('individual')}
@@ -197,7 +223,43 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
       </div>
 
       {/* Results Grid */}
-      {viewMode === 'grouped' ? (
+      {viewMode === 'hierarchy' ? (
+        hierarchicalData.length > 0 ? (
+          <div className="space-y-8">
+            {hierarchicalData.map(([categoryKey, groups]) => (
+              <div key={categoryKey} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                  <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
+                    <TreePine className="w-5 h-5 text-slate-600" />
+                    <span>{categoryKey}</span>
+                    <span className="text-sm font-normal text-slate-500">
+                      ({groups.length} group{groups.length !== 1 ? 's' : ''})
+                    </span>
+                  </h3>
+                </div>
+                <div className="p-6 space-y-6">
+                  {groups.map((group) => (
+                    <StructuredDataGroupCard 
+                      key={group.hash} 
+                      group={group} 
+                      allGroups={groupedData}
+                      currentFormatFilter={selectedFormat}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+            <TreePine className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">No Hierarchical Data Found</h3>
+            <p className="text-slate-500">
+              Try adjusting your search terms or filters to see more results.
+            </p>
+          </div>
+        )
+      ) : viewMode === 'grouped' ? (
         filteredGroupedData.length > 0 ? (
           <div className="space-y-6">
             {filteredGroupedData.map((group) => (
@@ -205,6 +267,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
                 key={group.hash} 
                 group={group} 
                 allGroups={groupedData}
+                currentFormatFilter={selectedFormat}
               />
             ))}
           </div>

@@ -41,6 +41,7 @@ export function groupStructuredData(items: StructuredDataItem[]): StructuredData
 
 function findConnections(item: StructuredDataItem, idToHashMap: Map<string, string>): Connection[] {
   const connections: Connection[] = [];
+  const seenConnections = new Set<string>();
   const data = item.data;
   
   // Helper function to check for references in any value
@@ -48,6 +49,9 @@ function findConnections(item: StructuredDataItem, idToHashMap: Map<string, stri
     if (typeof obj === 'string') {
       // Check if this looks like an ID reference
       if (idToHashMap.has(obj)) {
+        const connectionKey = `${determineConnectionType(path)}-${obj}-${path}`;
+        if (!seenConnections.has(connectionKey)) {
+          seenConnections.add(connectionKey);
         connections.push({
           type: determineConnectionType(path),
           targetId: obj,
@@ -55,6 +59,7 @@ function findConnections(item: StructuredDataItem, idToHashMap: Map<string, stri
           property: path,
           value: obj
         });
+        }
       }
     } else if (Array.isArray(obj)) {
       obj.forEach((item, index) => {

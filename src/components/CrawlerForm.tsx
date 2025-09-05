@@ -78,6 +78,12 @@ export function CrawlerForm({ onStartCrawl, onStopCrawl, isLoading }: CrawlerFor
       {/* Advanced Options */}
       {showAdvanced && (
         <div className="bg-slate-50 rounded-xl p-6 space-y-4">
+          <div className="mb-4">
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">Crawling Parameters</h4>
+            <p className="text-xs text-slate-600">
+              Configure how the crawler behaves when discovering structured data across your target domain.
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -91,6 +97,7 @@ export function CrawlerForm({ onStartCrawl, onStopCrawl, isLoading }: CrawlerFor
                 max="1000"
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <p className="text-xs text-slate-500 mt-1">Maximum number of pages to crawl</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -104,6 +111,7 @@ export function CrawlerForm({ onStartCrawl, onStopCrawl, isLoading }: CrawlerFor
                 max="10"
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <p className="text-xs text-slate-500 mt-1">How deep to follow links from the starting page</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -118,6 +126,7 @@ export function CrawlerForm({ onStartCrawl, onStopCrawl, isLoading }: CrawlerFor
                 step="100"
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <p className="text-xs text-slate-500 mt-1">Delay between requests to be respectful</p>
             </div>
             <div className="flex items-center">
               <label className="flex items-center space-x-2 cursor-pointer">
@@ -131,6 +140,7 @@ export function CrawlerForm({ onStartCrawl, onStopCrawl, isLoading }: CrawlerFor
                   Respect robots.txt
                 </span>
               </label>
+              <p className="text-xs text-slate-500 mt-1 ml-6">Follow robots.txt crawling rules</p>
             </div>
           </div>
         </div>
