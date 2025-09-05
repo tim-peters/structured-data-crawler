@@ -3,39 +3,56 @@ import { StructuredDataItem, StructuredDataGroup, Connection } from '../types/cr
 export function groupStructuredData(items: StructuredDataItem[]): StructuredDataGroup[] {
   const groups = new Map<string, StructuredDataGroup>();
   const idToHashMap = new Map<string, string>();
-  
-  // First pass: create groups and build ID to hash mapping
-  items.forEach(item => {
-  // Prefer @id if present, otherwise use id
-  const canonicalId = item.data['@id'] || item.id;
-  if (canonicalId) {
-    // Only overwrite if not already mapped to this hash
-    if (!idToHashMap.has(canonicalId) || idToHashMap.get(canonicalId) === item.hash) {
-      idToHashMap.set(canonicalId, item.hash);
+
+  // Helper: recursively collect all @id values from an object
+  function collectAllIds(obj: any, hash: string) {
+    if (obj && typeof obj === 'object') {
+      if (typeof obj['@id'] === 'string') {
+        if (!idToHashMap.has(obj['@id']) || idToHashMap.get(obj['@id']) === hash) {
+          idToHashMap.set(obj['@id'], hash);
+        }
+      }
+      Object.values(obj).forEach(value => {
+        if (typeof value === 'object') {
+          collectAllIds(value, hash);
+        }
+      });
     }
   }
 
-  if (!groups.has(item.hash)) {
-    groups.set(item.hash, {
-      hash: item.hash,
-      items: [],
-      type: item.type,
-      format: item.format,
-      connections: [],
-      duplicateCount: 0
-    });
-  }
+  // First pass: create groups and build ID to hash mapping
+  items.forEach(item => {
+    // Top-level id mapping
+    const canonicalId = item.data['@id'] || item.id;
+    if (canonicalId) {
+      if (!idToHashMap.has(canonicalId) || idToHashMap.get(canonicalId) === item.hash) {
+        idToHashMap.set(canonicalId, item.hash);
+      }
+    }
+    // Recursively collect nested @id
+    collectAllIds(item.data, item.hash);
 
-  const group = groups.get(item.hash)!;
-  group.items.push(item);
-  group.duplicateCount = group.items.length;
+    if (!groups.has(item.hash)) {
+      groups.set(item.hash, {
+        hash: item.hash,
+        items: [],
+        type: item.type,
+        format: item.format,
+        connections: [],
+        duplicateCount: 0
+      });
+    }
 
-  // Update format if we have mixed formats in the same group
-  if (group.format !== item.format) {
-    group.format = 'Mixed';
-  }
-});
-  
+    const group = groups.get(item.hash)!;
+    group.items.push(item);
+    group.duplicateCount = group.items.length;
+
+    // Update format if we have mixed formats in the same group
+    if (group.format !== item.format) {
+      group.format = 'Mixed';
+    }
+  });
+
   // Second pass: find connections
   groups.forEach(group => {
     group.connections = findConnections(group.items[0], idToHashMap);
@@ -57,13 +74,13 @@ function findConnections(item: StructuredDataItem, idToHashMap: Map<string, stri
         const connectionKey = `${determineConnectionType(path)}-${obj}-${path}`;
         if (!seenConnections.has(connectionKey)) {
           seenConnections.add(connectionKey);
-        connections.push({
-          type: determineConnectionType(path),
-          targetId: obj,
-          targetHash: idToHashMap.get(obj),
-          property: path,
-          value: obj
-        });
+          connections.push({
+            type: determineConnectionType(path),
+            targetId: obj,
+            targetHash: idToHashMap.get(obj),
+            property: path,
+            value: obj
+          });
         }
       }
     } else if (Array.isArray(obj)) {
