@@ -2,19 +2,16 @@ import { StructuredDataItem, StructuredDataGroup, Connection } from '../types/cr
 
 export function groupStructuredData(items: StructuredDataItem[]): StructuredDataGroup[] {
   const groups = new Map<string, StructuredDataGroup>();
-  const idToHashMap = new Map<string, string>();
-  const urlToHashMap = new Map<string, string>();
+  const idToHashMap = new Map<string, string>(); // Only for @id references
   
-  // First pass: create groups and build ID to hash mapping
+  // First pass: create groups and build @id to hash mapping
   items.forEach(item => {
+    // Only map explicit @id values, not URLs or other identifiers
     if (item.id) {
       idToHashMap.set(item.id, item.hash);
     }
     
-    // Also map URLs to hashes for better connection detection
-    urlToHashMap.set(item.url, item.hash);
-    
-    // Extract @id from nested data structures
+    // Extract @id from nested data structures (like mainEntity.@id)
     if (item.data && typeof item.data === 'object') {
       const extractIds = (obj: any, path: string = '') => {
         if (typeof obj === 'object' && obj !== null) {
@@ -52,65 +49,57 @@ export function groupStructuredData(items: StructuredDataItem[]): StructuredData
   
   // Second pass: find connections
   groups.forEach(group => {
-    group.connections = findConnections(group.items[0], idToHashMap, urlToHashMap);
+    group.connections = findConnections(group.items[0], idToHashMap);
   });
   
   return Array.from(groups.values()).sort((a, b) => b.duplicateCount - a.duplicateCount);
 }
 
-function findConnections(item: StructuredDataItem, idToHashMap: Map<string, string>, urlToHashMap: Map<string, string>): Connection[] {
+function findConnections(item: StructuredDataItem, idToHashMap: Map<string, string>): Connection[] {
   const connections: Connection[] = [];
   const seenConnections = new Set<string>();
   const data = item.data;
   
-  // Helper function to check for references in any value
+  // Helper function to check for @id references only
   const checkForReferences = (obj: any, path: string = '') => {
     if (typeof obj === 'string') {
-      // Check if this looks like an ID reference or URL reference
-      let targetHash: string | undefined;
-      let targetId = obj;
-      
+      // Only check for @id references, not URL references
       if (idToHashMap.has(obj)) {
-        targetHash = idToHashMap.get(obj);
-      } else if (urlToHashMap.has(obj)) {
-        targetHash = urlToHashMap.get(obj);
-      }
+        const targetHash = idToHashMap.get(obj);
       
-      if (targetHash && targetHash !== item.hash) {
-        const connectionKey = `${determineConnectionType(path)}-${obj}-${path}`;
-        if (!seenConnections.has(connectionKey)) {
-          seenConnections.add(connectionKey);
-          connections.push({
-            type: determineConnectionType(path),
-            targetId: targetId,
-            targetHash: targetHash,
-            property: path,
-            value: obj
-          });
+        if (targetHash && targetHash !== item.hash) {
+          const connectionKey = `${determineConnectionType(path)}-${obj}-${path}`;
+          if (!seenConnections.has(connectionKey)) {
+            seenConnections.add(connectionKey);
+            connections.push({
+              type: determineConnectionType(path),
+              targetId: obj,
+              targetHash: targetHash,
+              property: path,
+              value: obj
+            });
+          }
         }
       }
     } else if (obj && typeof obj === 'object' && obj['@id']) {
-      // Handle objects with @id properties (like author objects)
+      // Handle objects with @id properties (like author objects with nested @id)
       const id = obj['@id'];
-      let targetHash: string | undefined;
       
       if (idToHashMap.has(id)) {
-        targetHash = idToHashMap.get(id);
-      } else if (urlToHashMap.has(id)) {
-        targetHash = urlToHashMap.get(id);
-      }
+        const targetHash = idToHashMap.get(id);
       
-      if (targetHash && targetHash !== item.hash) {
-        const connectionKey = `${determineConnectionType(path)}-${id}-${path}`;
-        if (!seenConnections.has(connectionKey)) {
-          seenConnections.add(connectionKey);
-          connections.push({
-            type: determineConnectionType(path),
-            targetId: id,
-            targetHash: targetHash,
-            property: path,
-            value: id
-          });
+        if (targetHash && targetHash !== item.hash) {
+          const connectionKey = `${determineConnectionType(path)}-${id}-${path}`;
+          if (!seenConnections.has(connectionKey)) {
+            seenConnections.add(connectionKey);
+            connections.push({
+              type: determineConnectionType(path),
+              targetId: id,
+              targetHash: targetHash,
+              property: path,
+              value: id
+            });
+          }
         }
       }
       
@@ -169,12 +158,14 @@ export function findRelatedGroups(
   allGroups: StructuredDataGroup[]
 ): StructuredDataGroup[] {
   const relatedGroups: StructuredDataGroup[] = [];
+  const relatedHashes = new Set<string>();
   
   // Find groups that this group references
   targetGroup.connections.forEach(connection => {
     if (connection.targetHash) {
       const relatedGroup = allGroups.find(g => g.hash === connection.targetHash);
-      if (relatedGroup && !relatedGroups.includes(relatedGroup)) {
+      if (relatedGroup && !relatedHashes.has(relatedGroup.hash)) {
+        relatedHashes.add(relatedGroup.hash);
         relatedGroups.push(relatedGroup);
       }
     }
@@ -184,12 +175,13 @@ export function findRelatedGroups(
   allGroups.forEach(group => {
     if (group.hash === targetGroup.hash) return;
     
-    const hasReferenceToTarget = group.connections.some(conn => 
-      conn.targetHash === targetGroup.hash ||
-      (targetGroup.items[0].id && conn.targetId === targetGroup.items[0].id)
+    // Only include groups that have @id references to this group
+    const hasIdReferenceToTarget = group.connections.some(conn => 
+      conn.targetHash === targetGroup.hash
     );
     
-    if (hasReferenceToTarget && !relatedGroups.includes(group)) {
+    if (hasIdReferenceToTarget && !relatedHashes.has(group.hash)) {
+      relatedHashes.add(group.hash);
       relatedGroups.push(group);
     }
   });
