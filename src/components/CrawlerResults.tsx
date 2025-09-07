@@ -13,7 +13,8 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedFormat, setSelectedFormat] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grouped' | 'individual' | 'hierarchy'>('grouped');
+  // Change default view to 'hierarchy' (now "Grouped By Type")
+  const [viewMode, setViewMode] = useState<'hierarchy' | 'grouped' | 'individual'>('hierarchy');
   
   // Get unique types and formats
   const { types, formats } = useMemo(() => {
@@ -122,27 +123,19 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
             Discovered Structured Data
           </h2>
           <p className="text-slate-600 mt-1">
-            Found {data.length} items in {groupedData.length} groups
-            {viewMode === 'grouped' 
-              ? ` (showing ${filteredGroupedData.length} groups)`
-              : ` (showing ${filteredData.length} items)`
+            Found {data.length} items 
+            {viewMode === 'hierarchy' 
+              ? ` in ${groupedData.length} groups (showing ${hierarchicalData.length} categories)`
+              : viewMode === 'grouped'
+                ? ` in ${groupedData.length} groups`
+                : ``
             }
           </p>
         </div>
         <div className="flex items-center space-x-3">
           {/* View Mode Toggle */}
           <div className="flex items-center bg-slate-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grouped')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'grouped'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Group className="w-4 h-4" />
-              <span>Grouped</span>
-            </button>
+            {/* Hierarchy (Grouped By Type) - now first */}
             <button
               onClick={() => setViewMode('hierarchy')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -152,8 +145,21 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
               }`}
             >
               <TreePine className="w-4 h-4" />
-              <span>Hierarchy</span>
+              <span>Grouped By Type</span>
             </button>
+            {/* Grouped (Individual View) - now second */}
+            <button
+              onClick={() => setViewMode('grouped')}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'grouped'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Group className="w-4 h-4" />
+              <span>Individual View</span>
+            </button>
+            {/* Individual (Raw View) - now third */}
             <button
               onClick={() => setViewMode('individual')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -163,7 +169,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
               }`}
             >
               <List className="w-4 h-4" />
-              <span>Individual</span>
+              <span>Raw View</span>
             </button>
           </div>
           
