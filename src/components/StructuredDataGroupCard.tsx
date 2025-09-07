@@ -26,6 +26,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
   const [showConnections, setShowConnections] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showAllUrls, setShowAllUrls] = useState(false);
+  const [showRelatedGroups, setShowRelatedGroups] = useState(false);
 
   const allRelatedGroups = findRelatedGroups(group, allGroups);
   const relatedGroups = currentFormatFilter === 'all' 
@@ -282,46 +283,56 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
       {/* Related Groups */}
       {relatedGroups.length > 0 && (
         <div className="px-6 py-4 bg-blue-50 border-t border-slate-100">
-          <h5 className="text-sm font-semibold text-slate-900 mb-3">
-            Related Groups ({relatedGroups.length})
-          </h5>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {relatedGroups.map((relatedGroup) => {
-              const descriptiveName = getDescriptiveName(relatedGroup);
-              return (
-                <a
-                  href={`#group-${relatedGroup.hash}`}
-                  key={relatedGroup.hash}
-                  className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedGroup.format)}`}>
-                        {relatedGroup.format}
-                      </span>
-                      {relatedGroup.type && (
-                        <span className="text-xs text-slate-600">{relatedGroup.type}</span>
+          <button
+            onClick={() => setShowRelatedGroups(!showRelatedGroups)}
+            className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+          >
+            {showRelatedGroups ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+            <span>Related Groups ({relatedGroups.length})</span>
+          </button>
+          {showRelatedGroups && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {relatedGroups.map((relatedGroup) => {
+                const descriptiveName = getDescriptiveName(relatedGroup);
+                return (
+                  <a
+                    href={`#group-${relatedGroup.hash}`}
+                    key={relatedGroup.hash}
+                    className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedGroup.format)}`}>
+                          {relatedGroup.format}
+                        </span>
+                        {relatedGroup.type && (
+                          <span className="text-xs text-slate-600">{relatedGroup.type}</span>
+                        )}
+                      </div>
+                      {descriptiveName && (
+                        <p className="text-sm font-medium text-slate-800 mb-1 line-clamp-2">
+                          {descriptiveName.length > 60 ? `${descriptiveName.substring(0, 60)}...` : descriptiveName}
+                        </p>
                       )}
+                      <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
                     </div>
-                    {descriptiveName && (
-                      <p className="text-sm font-medium text-slate-800 mb-1 line-clamp-2">
-                        {descriptiveName.length > 60 ? `${descriptiveName.substring(0, 60)}...` : descriptiveName}
+                    <p className="text-xs text-slate-500 font-mono">
+                      Hash: {relatedGroup.hash}
+                    </p>
+                    {relatedGroup.duplicateCount > 1 && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        {relatedGroup.duplicateCount} duplicates
                       </p>
                     )}
-                    <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
-                  </div>
-                  <p className="text-xs text-slate-500 font-mono">
-                    Hash: {relatedGroup.hash}
-                  </p>
-                  {relatedGroup.duplicateCount > 1 && (
-                    <p className="text-xs text-amber-600 mt-1">
-                      {relatedGroup.duplicateCount} duplicates
-                    </p>
-                  )}
-                </a>
-              );
-            })}
-          </div>
+                  </a>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
