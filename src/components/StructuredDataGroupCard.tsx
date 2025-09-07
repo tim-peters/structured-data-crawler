@@ -135,13 +135,13 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
       className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
     >
       {/* Group Header */}
-      <div className="p-6 border-b border-slate-100">
-        <div className="flex items-start justify-between mb-4">
+      <div className="p-6">
+        <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg">
+              {/*<div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg">
                 <Database className="w-5 h-5 text-slate-600" />
-              </div>
+              </div>*/}
               <div>
                 <div className="flex items-center space-x-2 mb-1">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${formatBadgeColor(group.format)}`}>
@@ -159,9 +159,6 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-600">
-                  Hash: <code className="font-mono text-xs bg-slate-100 px-1 rounded">{group.hash}</code>
-                </p>
               </div>
             </div>
 
@@ -301,7 +298,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
         <div id={`related-groups-${group.hash}`} className="px-6 py-4 bg-blue-50 border-t border-slate-100">
           <button
             onClick={() => setShowRelatedGroups(!showRelatedGroups)}
-            className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+            className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors mb-3"
           >
             {showRelatedGroups ? (
               <ChevronDown className="w-4 h-4" />
@@ -325,9 +322,6 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedGroup.format)}`}>
                           {relatedGroup.format}
                         </span>
-                        {relatedGroup.type && (
-                          <span className="text-xs text-slate-600">{relatedGroup.type}</span>
-                        )}
                       </div>
                       {descriptiveName && (
                         <p className="text-sm font-medium text-slate-800 mb-1 line-clamp-2">
@@ -337,7 +331,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
                       <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
                     </div>
                     <p className="text-xs text-slate-500 font-mono">
-                      Hash: {relatedGroup.hash}
+                      Type: {relatedGroup.type}
                     </p>
                     {relatedGroup.duplicateCount > 1 && (
                       <p className="text-xs text-amber-600 mt-1">
