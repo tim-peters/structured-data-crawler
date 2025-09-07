@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { StructuredDataItem, StructuredDataGroup } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
 import { StructuredDataGroupCard } from './StructuredDataGroupCard';
-import { Filter, Search, Download, Eye, Group, List, TreePine } from 'lucide-react';
+import { Filter, Search, Download, Eye, Group, List, TreePine, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface CrawlerResultsProps {
   data: StructuredDataItem[];
@@ -14,7 +14,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedFormat, setSelectedFormat] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grouped' | 'individual' | 'hierarchy'>('grouped');
-
+  
   // Get unique types and formats
   const { types, formats } = useMemo(() => {
     const typeSet = new Set<string>();
@@ -66,7 +66,6 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
   // Create hierarchical view data
   const hierarchicalData = useMemo(() => {
     const hierarchy: { [key: string]: StructuredDataGroup[] } = {};
-    
     filteredGroupedData.forEach(group => {
       const key = `${group.format} - ${group.type || 'Unknown'}`;
       if (!hierarchy[key]) {
@@ -74,9 +73,19 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
       }
       hierarchy[key].push(group);
     });
-    
     return Object.entries(hierarchy).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredGroupedData]);
+
+  // Set all categories expanded by default
+  const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({});
+
+  useEffect(() => {
+    const initial: { [key: string]: boolean } = {};
+    hierarchicalData.forEach(([categoryKey]) => {
+      initial[categoryKey] = true;
+    });
+    setExpandedCategories(initial);
+  }, [hierarchicalData]);
 
   const exportData = () => {
     const exportObj = {
@@ -95,6 +104,13 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const toggleCategory = (key: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
   return (
@@ -228,7 +244,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
           <div className="space-y-8">
             {hierarchicalData.map(([categoryKey, groups]) => (
               <div key={categoryKey} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
                     <TreePine className="w-5 h-5 text-slate-600" />
                     <span>{categoryKey}</span>
@@ -236,17 +252,30 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
                       ({groups.length} group{groups.length !== 1 ? 's' : ''})
                     </span>
                   </h3>
+                  <button
+                    onClick={() => toggleCategory(categoryKey)}
+                    className="flex items-center space-x-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                  >
+                    {expandedCategories[categoryKey] ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                    <span>{expandedCategories[categoryKey] ? 'Hide' : 'Show'} Groups</span>
+                  </button>
                 </div>
-                <div className="p-6 space-y-6">
-                  {groups.map((group) => (
-                    <StructuredDataGroupCard 
-                      key={group.hash} 
-                      group={group} 
-                      allGroups={groupedData}
-                      currentFormatFilter={selectedFormat}
-                    />
-                  ))}
-                </div>
+                {expandedCategories[categoryKey] && (
+                  <div className="p-6 space-y-6">
+                    {groups.map((group) => (
+                      <StructuredDataGroupCard 
+                        key={group.hash} 
+                        group={group} 
+                        allGroups={groupedData}
+                        currentFormatFilter={selectedFormat}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
