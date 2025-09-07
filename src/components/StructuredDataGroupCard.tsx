@@ -188,22 +188,6 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
             </div>
           </div>
 
-          <button
-            onClick={copyToClipboard}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all duration-200"
-          >
-            {copied ? (
-              <>
-                <Check className="w-4 h-4 text-green-600" />
-                <span className="text-green-600">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4" />
-                <span>Copy Group</span>
-              </>
-            )}
-          </button>
         </div>
 
         {/* Connections Summary */}
@@ -221,6 +205,17 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
             )}
           </div>
         )}
+      </div>
+
+      {/* Group Items */}
+      <div className="p-6">
+        <div className="space-y-4">
+          {group.items.length > 0 && (
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <StructuredDataCard item={group.items[0]} compact />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Connections */}
@@ -269,45 +264,6 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
           )}
         </div>
       )}
-
-      {/* Group Items */}
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-semibold text-slate-900">
-            Group Items ({group.items.length})
-          </h4>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center space-x-2 text-sm text-slate-600 hover:text-slate-800 transition-colors"
-          >
-            {isExpanded ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-            <span>{isExpanded ? 'Hide' : 'Show'} Details</span>
-          </button>
-        </div>
-
-        {isExpanded && (
-          <div className="space-y-4">
-            {group.items.map((item, index) => (
-              <div key={index} className="border border-slate-200 rounded-lg overflow-hidden">
-                <StructuredDataCard item={item} compact />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!isExpanded && (
-          <div className="bg-slate-50 rounded-lg p-3">
-            <pre className="text-xs text-slate-700 font-mono overflow-hidden">
-              {JSON.stringify(group.items[0].data, null, 2).substring(0, 300)}
-              {JSON.stringify(group.items[0].data, null, 2).length > 300 && '...'}
-            </pre>
-          </div>
-        )}
-      </div>
 
       {/* Related Groups */}
       {relatedGroups.length > 0 && (

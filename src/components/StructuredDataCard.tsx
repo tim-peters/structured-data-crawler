@@ -54,15 +54,6 @@ export function StructuredDataCard({ item, compact = false }: StructuredDataCard
                 </span>
               )}
             </div>
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`text-blue-600 hover:text-blue-800 font-medium ${compact ? 'text-xs' : 'text-sm'} flex items-center space-x-1 group`}
-            >
-              <span className="truncate">{item.url}</span>
-              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-            </a>
           </div>
         </div>
 
