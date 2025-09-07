@@ -25,6 +25,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showConnections, setShowConnections] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showAllUrls, setShowAllUrls] = useState(false);
 
   const allRelatedGroups = findRelatedGroups(group, allGroups);
   const relatedGroups = currentFormatFilter === 'all' 
@@ -167,7 +168,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
             <div className="space-y-1">
               <p className="text-sm font-medium text-slate-700">Found on {uniqueUrls.length} page{uniqueUrls.length !== 1 ? 's' : ''}:</p>
               <div className="flex flex-wrap gap-2">
-                {uniqueUrls.slice(0, 3).map((url, index) => (
+                {(showAllUrls ? uniqueUrls : uniqueUrls.slice(0, 3)).map((url, index) => (
                   <a
                     key={index}
                     href={url}
@@ -179,10 +180,23 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
                     <span className="truncate max-w-[200px]">{new URL(url).pathname || '/'}</span>
                   </a>
                 ))}
-                {uniqueUrls.length > 3 && (
-                  <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                {!showAllUrls && uniqueUrls.length > 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllUrls(true)}
+                    className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md hover:bg-slate-200 transition-colors"
+                  >
                     +{uniqueUrls.length - 3} more
-                  </span>
+                  </button>
+                )}
+                {showAllUrls && uniqueUrls.length > 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllUrls(false)}
+                    className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md hover:bg-slate-200 transition-colors"
+                  >
+                    Show less
+                  </button>
                 )}
               </div>
             </div>
