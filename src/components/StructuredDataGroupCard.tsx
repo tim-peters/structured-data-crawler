@@ -141,7 +141,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
             <div className="flex items-center space-x-3 mb-3">
               {/*<div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg">
                 <Database className="w-5 h-5 text-slate-600" />
-              </div>*/}
+              </div>
               <div>
                 <div className="flex items-center space-x-2 mb-1">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${formatBadgeColor(group.format)}`}>
@@ -159,9 +159,16 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
                     </span>
                   )}
                 </div>
-              </div>
+              </div>*/}
             </div>
-
+            {/* Add descriptiveName as a title */}
+            {getDescriptiveName(group) && (
+              <p className="text-lg font-medium text-slate-900 mb-2">
+                {getDescriptiveName(group).length > 60
+                  ? `${getDescriptiveName(group).substring(0, 60)}...`
+                  : getDescriptiveName(group)}
+              </p>
+            )}
             {/* URLs */}
             <div className="space-y-1">
               <p className="text-sm font-medium text-slate-700">Found on {uniqueUrls.length} page{uniqueUrls.length !== 1 ? 's' : ''}:</p>
@@ -201,38 +208,6 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
           </div>
 
         </div>
-
-        {/* Connections Summary */}
-        {group.connections.length > 0 && (
-          <div className="flex items-center space-x-4 text-sm">
-            <a
-              href={`#connections-${group.hash}`}
-              onClick={e => {
-                e.preventDefault();
-                setShowConnections(!showConnections);
-                document.getElementById(`connections-${group.hash}`)?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
-            >
-              <Link className="w-4 h-4" />
-              <span>{group.connections.length} connection{group.connections.length !== 1 ? 's' : ''}</span>
-            </a>
-            {relatedGroups.length > 0 && (
-              <a
-                href={`#related-groups-${group.hash}`}
-                onClick={e => {
-                  e.preventDefault();
-                  setShowRelatedGroups(!showRelatedGroups);
-                  document.getElementById(`related-groups-${group.hash}`)?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
-              >
-                <GitBranch className="w-4 h-4" />
-                <span>{relatedGroups.length} related group{relatedGroups.length !== 1 ? 's' : ''}</span>
-              </a>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Group Items */}
@@ -258,6 +233,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
+            <GitBranch className="w-4 h-4" />
             <span>Connections ({group.connections.length})</span>
           </button>
 
@@ -305,6 +281,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
+            <Link className="w-4 h-4" />
             <span>Related Groups ({relatedGroups.length})</span>
           </button>
           {showRelatedGroups && (
