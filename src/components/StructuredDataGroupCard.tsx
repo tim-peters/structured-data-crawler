@@ -11,8 +11,7 @@ import {
   Globe, 
   Database,
   GitBranch,
-  Users,
-  ExternalLink
+  Users
 } from 'lucide-react';
 
 interface StructuredDataGroupCardProps {
@@ -135,14 +134,22 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
       className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
     >
       {/* Group Header */}
-      <div className="p-6">
+      <div className="p-6 pb-0">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3 mb-3">
-              {/*<div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg">
+              <div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg">
                 <Database className="w-5 h-5 text-slate-600" />
               </div>
-              <div>
+              {/* Add descriptiveName as a title */}
+              {getDescriptiveName(group) && (
+                <p className="text-lg font-medium text-slate-900 mb-2">
+                  {getDescriptiveName(group).length > 60
+                    ? `${getDescriptiveName(group).substring(0, 60)}...`
+                    : getDescriptiveName(group)}
+                </p>
+              )}
+              {/*<div>
                 <div className="flex items-center space-x-2 mb-1">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${formatBadgeColor(group.format)}`}>
                     {group.format}
@@ -161,14 +168,6 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
                 </div>
               </div>*/}
             </div>
-            {/* Add descriptiveName as a title */}
-            {getDescriptiveName(group) && (
-              <p className="text-lg font-medium text-slate-900 mb-2">
-                {getDescriptiveName(group).length > 60
-                  ? `${getDescriptiveName(group).substring(0, 60)}...`
-                  : getDescriptiveName(group)}
-              </p>
-            )}
             {/* URLs */}
             <div className="space-y-1">
               <p className="text-sm font-medium text-slate-700">Found on {uniqueUrls.length} page{uniqueUrls.length !== 1 ? 's' : ''}:</p>
@@ -305,10 +304,10 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
                           {descriptiveName.length > 60 ? `${descriptiveName.substring(0, 60)}...` : descriptiveName}
                         </p>
                       )}
-                      <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                      <Link className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
                     </div>
                     <p className="text-xs text-slate-500 font-mono">
-                      Type: {relatedGroup.type}
+                      {relatedGroup.type}
                     </p>
                     {relatedGroup.duplicateCount > 1 && (
                       <p className="text-xs text-amber-600 mt-1">
