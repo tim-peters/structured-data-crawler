@@ -208,15 +208,31 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
         {/* Connections Summary */}
         {group.connections.length > 0 && (
           <div className="flex items-center space-x-4 text-sm">
-            <div className="flex items-center space-x-2 text-slate-600">
+            <a
+              href={`#connections-${group.hash}`}
+              onClick={e => {
+                e.preventDefault();
+                setShowConnections(!showConnections);
+                document.getElementById(`connections-${group.hash}`)?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
+            >
               <Link className="w-4 h-4" />
               <span>{group.connections.length} connection{group.connections.length !== 1 ? 's' : ''}</span>
-            </div>
+            </a>
             {relatedGroups.length > 0 && (
-              <div className="flex items-center space-x-2 text-slate-600">
+              <a
+                href={`#related-groups-${group.hash}`}
+                onClick={e => {
+                  e.preventDefault();
+                  setShowRelatedGroups(!showRelatedGroups);
+                  document.getElementById(`related-groups-${group.hash}`)?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
+              >
                 <GitBranch className="w-4 h-4" />
                 <span>{relatedGroups.length} related group{relatedGroups.length !== 1 ? 's' : ''}</span>
-              </div>
+              </a>
             )}
           </div>
         )}
@@ -235,7 +251,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
 
       {/* Connections */}
       {group.connections.length > 0 && (
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100">
+        <div id={`connections-${group.hash}`} className="px-6 py-4 bg-slate-50 border-b border-slate-100">
           <button
             onClick={() => setShowConnections(!showConnections)}
             className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
@@ -282,7 +298,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
 
       {/* Related Groups */}
       {relatedGroups.length > 0 && (
-        <div className="px-6 py-4 bg-blue-50 border-t border-slate-100">
+        <div id={`related-groups-${group.hash}`} className="px-6 py-4 bg-blue-50 border-t border-slate-100">
           <button
             onClick={() => setShowRelatedGroups(!showRelatedGroups)}
             className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
