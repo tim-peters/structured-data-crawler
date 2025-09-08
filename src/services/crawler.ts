@@ -3,10 +3,18 @@ import { CrawlOptions } from '../components/CrawlerForm';
 import { extractStructuredData } from './structuredDataExtractor';
 import { parseRobotsTxt } from './robotsParser';
 
-function normalizeUrl(url: string): string {
+function normalizeUrl(url: string, forceHttpsForDomain?: string): string {
   try {
     const urlObj = new URL(url);
-    
+
+    // Force HTTPS for the main domain if requested
+    if (
+      forceHttpsForDomain &&
+      (urlObj.hostname === forceHttpsForDomain || urlObj.hostname === 'www.' + forceHttpsForDomain)
+    ) {
+      urlObj.protocol = 'https:';
+    }
+
     // Remove www. prefix from hostname
     if (urlObj.hostname.startsWith('www.')) {
       urlObj.hostname = urlObj.hostname.substring(4);
@@ -19,7 +27,6 @@ function normalizeUrl(url: string): string {
     if (urlObj.pathname === '' || urlObj.pathname === '/') {
       urlObj.pathname = '/';
     } else {
-      // Remove trailing slash from non-root paths
       urlObj.pathname = urlObj.pathname.replace(/\/$/, '');
     }
     
@@ -199,11 +206,11 @@ export async function crawlDomain(
   callbacks: CrawlCallbacks
 ): Promise<void> {
   const { onProgress, onData, signal } = callbacks;
-  
-  // Normalize domain
-  const baseUrl = normalizeUrl(domain.startsWith('http') ? domain : `https://${domain}`);
+
+  // Always use HTTPS for the main crawl target
+  const baseDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '');
+  const baseUrl = normalizeUrl(`https://${baseDomain}`, baseDomain);
   const urlObj = new URL(baseUrl);
-  const baseDomain = urlObj.hostname.startsWith('www.') ? urlObj.hostname.substring(4) : urlObj.hostname;
 
   const state: CrawlState = {
     visited: new Set(),
@@ -278,7 +285,8 @@ export async function crawlDomain(
       if (depth < options.maxDepth) {
         const links = extractLinks(html, finalUrl, baseDomain);
         for (const link of links) {
-          const normalizedLink = normalizeUrl(link);
+          // Force HTTPS for links matching the base domain
+          const normalizedLink = normalizeUrl(link, baseDomain);
           if (!state.visited.has(normalizedLink) && state.queue.length < 1000) {
             state.queue.push({ url: normalizedLink, depth: depth + 1 });
           }
@@ -315,7 +323,7 @@ function extractLinks(html: string, baseUrl: string, baseDomain: string): string
         absoluteUrl = new URL(href, baseUrl).href;
       }
 
-      const normalizedUrl = normalizeUrl(absoluteUrl);
+      const normalizedUrl = normalizeUrl(absoluteUrl, baseDomain);
       const urlObj = new URL(normalizedUrl);
       const urlDomain = urlObj.hostname.startsWith('www.') ? urlObj.hostname.substring(4) : urlObj.hostname;
       
