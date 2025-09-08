@@ -7,7 +7,7 @@ export interface StructuredDataItem {
   hash: string;
 }
 
-export interface StructuredDataGroup {
+export interface StructuredDataSnippet {
   hash: string;
   items: StructuredDataItem[];
   type?: string;

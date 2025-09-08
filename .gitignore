@@ -1,6 +1,9 @@
 # Node.js dependencies
 node_modules/
 
+# vite
+.vite/
+
 # Build output
 dist/
 build/

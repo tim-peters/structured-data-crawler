@@ -8,7 +8,7 @@ import { Globe, Database } from 'lucide-react';
 function App() {
   const {
     crawlData,
-    groupedData,
+    snippetData,
     isLoading,
     error,
     stats,
@@ -66,8 +66,8 @@ function App() {
           )}
 
           {/* Results */}
-          {groupedData.length > 0 && (
-            <CrawlerResults data={crawlData} groupedData={groupedData} />
+          {snippetData.length > 0 && (
+            <CrawlerResults data={crawlData} snippetData={snippetData} />
           )}
 
           {/* Empty State */}

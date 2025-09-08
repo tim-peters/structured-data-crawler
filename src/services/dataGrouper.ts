@@ -1,7 +1,7 @@
-import { StructuredDataItem, StructuredDataGroup, Connection } from '../types/crawler';
+import { StructuredDataItem, StructuredDataSnippet, Connection } from '../types/crawler';
 
-export function groupStructuredData(items: StructuredDataItem[]): StructuredDataGroup[] {
-  const groups = new Map<string, StructuredDataGroup>();
+export function groupStructuredData(items: StructuredDataItem[]): StructuredDataSnippet[] {
+  const snippets = new Map<string, StructuredDataSnippet>();
   const idToHashMap = new Map<string, string>();
 
   // Helper: recursively collect all @id values from an object
@@ -32,8 +32,8 @@ export function groupStructuredData(items: StructuredDataItem[]): StructuredData
     // Recursively collect nested @id
     collectAllIds(item.data, item.hash);
 
-    if (!groups.has(item.hash)) {
-      groups.set(item.hash, {
+    if (!snippets.has(item.hash)) {
+      snippets.set(item.hash, {
         hash: item.hash,
         items: [],
         type: item.type,
@@ -43,22 +43,22 @@ export function groupStructuredData(items: StructuredDataItem[]): StructuredData
       });
     }
 
-    const group = groups.get(item.hash)!;
-    group.items.push(item);
-    group.duplicateCount = group.items.length;
+    const snippet = snippets.get(item.hash)!;
+    snippet.items.push(item);
+    snippet.duplicateCount = snippet.items.length;
 
     // Update format if we have mixed formats in the same group
-    if (group.format !== item.format) {
-      group.format = 'Mixed';
+    if (snippet.format !== item.format) {
+      snippet.format = 'Mixed';
     }
   });
 
-  // Second pass: find connections
-  groups.forEach(group => {
-    group.connections = findConnections(group.items[0], idToHashMap);
+  // Second pass: find connections  
+  snippets.forEach(snippet => {
+    snippet.connections = findConnections(snippet.items[0], idToHashMap);
   });
   
-  return Array.from(groups.values()).sort((a, b) => b.duplicateCount - a.duplicateCount);
+  return Array.from(snippets.values()).sort((a, b) => b.duplicateCount - a.duplicateCount);
 }
 
 function findConnections(item: StructuredDataItem, idToHashMap: Map<string, string>): Connection[] {
@@ -129,35 +129,35 @@ function determineConnectionType(property: string): Connection['type'] {
   return 'reference';
 }
 
-export function findRelatedGroups(
-  targetGroup: StructuredDataGroup, 
-  allGroups: StructuredDataGroup[]
-): StructuredDataGroup[] {
-  const relatedGroups: StructuredDataGroup[] = [];
+export function findRelatedSnippets(
+  targetSnippet: StructuredDataSnippet, 
+  allSnippets: StructuredDataSnippet[]
+): StructuredDataSnippet[] {
+  const relatedSnippets: StructuredDataSnippet[] = [];
   
-  // Find groups that this group references
-  targetGroup.connections.forEach(connection => {
+  // Find snippets that this snippet references
+  targetSnippet.connections.forEach(connection => {
     if (connection.targetHash) {
-      const relatedGroup = allGroups.find(g => g.hash === connection.targetHash);
-      if (relatedGroup && !relatedGroups.includes(relatedGroup)) {
-        relatedGroups.push(relatedGroup);
+      const relatedSnippet = allSnippets.find(s => s.hash === connection.targetHash);
+      if (relatedSnippet && !relatedSnippets.includes(relatedSnippet)) {
+        relatedSnippets.push(relatedSnippet);
       }
     }
   });
   
-  // Find groups that reference this group
-  allGroups.forEach(group => {
-    if (group.hash === targetGroup.hash) return;
+  // Find snippets that reference this snippet
+  allSnippets.forEach(snippet => {
+    if (snippet.hash === targetSnippet.hash) return;
     
-    const hasReferenceToTarget = group.connections.some(conn => 
-      conn.targetHash === targetGroup.hash ||
-      (targetGroup.items[0].id && conn.targetId === targetGroup.items[0].id)
+    const hasReferenceToTarget = snippet.connections.some(conn => 
+      conn.targetHash === targetSnippet.hash ||
+      (targetSnippet.items[0].id && conn.targetId === targetSnippet.items[0].id)
     );
     
-    if (hasReferenceToTarget && !relatedGroups.includes(group)) {
-      relatedGroups.push(group);
+    if (hasReferenceToTarget && !relatedSnippets.includes(snippet)) {
+      relatedSnippets.push(snippet);
     }
   });
   
-  return relatedGroups;
+  return relatedSnippets;
 }

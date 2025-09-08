@@ -1,20 +1,20 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { StructuredDataItem, StructuredDataGroup } from '../types/crawler';
+import { StructuredDataItem, StructuredDataSnippet } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
-import { StructuredDataGroupCard } from './StructuredDataGroupCard';
+import { StructuredDataSnippetCard } from './StructuredDataSnippetCard';
 import { Filter, Search, Download, Eye, Group, List, TreePine, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface CrawlerResultsProps {
   data: StructuredDataItem[];
-  groupedData: StructuredDataGroup[];
+  snippetData: StructuredDataSnippet[];
 }
 
-export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
+export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedFormat, setSelectedFormat] = useState<string>('all');
-  // Change default view to 'hierarchy' (now "Grouped By Type")
-  const [viewMode, setViewMode] = useState<'hierarchy' | 'grouped' | 'individual'>('hierarchy');
+  // Change default view to 'byType' (now "By Type")
+  const [viewMode, setViewMode] = useState<'byType' | 'bySnippet' | 'byOccurrence'>('byType');
   
   // Get unique types and formats
   const { types, formats } = useMemo(() => {
@@ -48,52 +48,52 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
   }, [data, searchTerm, selectedType, selectedFormat]);
 
   // Filter grouped data
-  const filteredGroupedData = useMemo(() => {
-    return groupedData.filter(group => {
+  const filteredSnippetData = useMemo(() => {
+    return snippetData.filter(snippet => {
       const matchesSearch = searchTerm === '' || 
-        group.items.some(item => 
+        snippet.items.some(item => 
           item.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           JSON.stringify(item.data).toLowerCase().includes(searchTerm.toLowerCase())
         );
       
-      const matchesType = selectedType === 'all' || group.type === selectedType;
-      const matchesFormat = selectedFormat === 'all' || group.format === selectedFormat;
+      const matchesType = selectedType === 'all' || snippet.type === selectedType;
+      const matchesFormat = selectedFormat === 'all' || snippet.format === selectedFormat;
       
       return matchesSearch && matchesType && matchesFormat;
     });
-  }, [groupedData, searchTerm, selectedType, selectedFormat]);
+  }, [snippetData, searchTerm, selectedType, selectedFormat]);
 
-  // Create hierarchical view data
-  const hierarchicalData = useMemo(() => {
-    const hierarchy: { [key: string]: StructuredDataGroup[] } = {};
-    filteredGroupedData.forEach(group => {
-      const key = `${group.format} - ${group.type || 'Unknown'}`;
+  // Create by type view data
+  const byTypeData = useMemo(() => {
+    const hierarchy: { [key: string]: StructuredDataSnippet[] } = {};
+    filteredSnippetData.forEach(snippet => {
+      const key = `${snippet.format} - ${snippet.type || 'Unknown'}`;
       if (!hierarchy[key]) {
         hierarchy[key] = [];
       }
-      hierarchy[key].push(group);
+      hierarchy[key].push(snippet);
     });
     return Object.entries(hierarchy).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredGroupedData]);
+  }, [filteredSnippetData]);
 
   // Set all categories expanded by default
   const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     const initial: { [key: string]: boolean } = {};
-    hierarchicalData.forEach(([categoryKey]) => {
+    byTypeData.forEach(([categoryKey]) => {
       initial[categoryKey] = true;
     });
     setExpandedCategories(initial);
-  }, [hierarchicalData]);
+  }, [byTypeData]);
 
   const exportData = () => {
     const exportObj = {
       crawledAt: new Date().toISOString(),
       totalItems: data.length,
       individualData: filteredData,
-      groupedData: groupedData
+      snippetData: snippetData
     };
     
     const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
@@ -124,30 +124,30 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
           </h2>
           <p className="text-slate-600 mt-1">
             Found {data.length} occurences
-            {viewMode !== 'individual' && ` of ${groupedData.length} snippets`}
-            {viewMode === 'hierarchy' && ` (${hierarchicalData.length} types)`}
+            {viewMode !== 'byOccurrence' && ` of ${snippetData.length} snippets`}
+            {viewMode === 'byType' && ` (${byTypeData.length} types)`}
           </p>
         </div>
         <div className="flex items-center space-x-3">
           {/* View Mode Toggle */}
           <div className="flex items-center bg-slate-100 rounded-lg p-1">
-            {/* Hierarchy (Grouped By Type) - now first */}
+            {/* By Type - now first */}
             <button
-              onClick={() => setViewMode('hierarchy')}
+              onClick={() => setViewMode('byType')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'hierarchy'
+                viewMode === 'byType'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <TreePine className="w-4 h-4" />
-              <span>Grouped by Type</span>
+              <span>By Type</span>
             </button>
-            {/* Grouped (Individual View) - now second */}
+            {/* By Snippet - now second */}
             <button
-              onClick={() => setViewMode('grouped')}
+              onClick={() => setViewMode('bySnippet')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'grouped'
+                viewMode === 'bySnippet'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -155,17 +155,17 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
               <Group className="w-4 h-4" />
               <span>By Snippet</span>
             </button>
-            {/* Individual (Raw View) - now third */}
+            {/* By Occurrence - now third */}
             <button
-              onClick={() => setViewMode('individual')}
+              onClick={() => setViewMode('byOccurrence')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'individual'
+                viewMode === 'byOccurrence'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <List className="w-4 h-4" />
-              <span>All Occurences</span>
+              <span>By Occurrence</span>
             </button>
           </div>
           
@@ -241,17 +241,17 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
       </div>
 
       {/* Results Grid */}
-      {viewMode === 'hierarchy' ? (
-        hierarchicalData.length > 0 ? (
+      {viewMode === 'byType' ? (
+        byTypeData.length > 0 ? (
           <div className="space-y-8">
-            {hierarchicalData.map(([categoryKey, groups]) => (
+            {byTypeData.map(([categoryKey, snippets]) => (
               <div key={categoryKey} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
                     <TreePine className="w-5 h-5 text-slate-600" />
                     <span>{categoryKey}</span>
                     <span className="text-sm font-normal text-slate-500">
-                      ({groups.length} snippet{groups.length !== 1 ? 's' : ''})
+                      ({snippets.length} snippet{snippets.length !== 1 ? 's' : ''})
                     </span>
                   </h3>
                   <button
@@ -268,11 +268,11 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
                 </div>
                 {expandedCategories[categoryKey] && (
                   <div className="p-6 space-y-6">
-                    {groups.map((group) => (
-                      <StructuredDataGroupCard 
-                        key={group.hash} 
-                        group={group} 
-                        allGroups={groupedData}
+                    {snippets.map((snippet) => (
+                      <StructuredDataSnippetCard 
+                        key={snippet.hash} 
+                        snippet={snippet} 
+                        allSnippets={snippetData}
                         currentFormatFilter={selectedFormat}
                       />
                     ))}
@@ -284,20 +284,20 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
         ) : (
           <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
             <TreePine className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-700 mb-2">No Hierarchical Data Found</h3>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">No Structured Data Found</h3>
             <p className="text-slate-500">
               Try adjusting your search terms or filters to see more results.
             </p>
           </div>
         )
-      ) : viewMode === 'grouped' ? (
-        filteredGroupedData.length > 0 ? (
+      ) : viewMode === 'bySnippet' ? (
+        filteredSnippetData.length > 0 ? (
           <div className="space-y-6">
-            {filteredGroupedData.map((group) => (
-              <StructuredDataGroupCard 
-                key={group.hash} 
-                group={group} 
-                allGroups={groupedData}
+            {filteredSnippetData.map((snippet) => (
+              <StructuredDataSnippetCard 
+                key={snippet.hash} 
+                snippet={snippet} 
+                allSnippets={snippetData}
                 currentFormatFilter={selectedFormat}
               />
             ))}

@@ -1,12 +1,12 @@
 import { useState, useCallback, useRef } from 'react';
-import { StructuredDataItem, CrawlStats, StructuredDataGroup } from '../types/crawler';
+import { StructuredDataItem, CrawlStats, StructuredDataSnippet } from '../types/crawler';
 import { CrawlOptions } from '../components/CrawlerForm';
 import { crawlDomain } from '../services/crawler';
 import { groupStructuredData } from '../services/dataGrouper';
 
 export function useCrawler() {
   const [crawlData, setCrawlData] = useState<StructuredDataItem[]>([]);
-  const [groupedData, setGroupedData] = useState<StructuredDataGroup[]>([]);
+  const [snippetData, setSnippetData] = useState<StructuredDataSnippet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<CrawlStats | null>(null);
@@ -16,7 +16,7 @@ export function useCrawler() {
     setIsLoading(true);
     setError(null);
     setCrawlData([]);
-    setGroupedData([]);
+    setSnippetData([]);
     setStats({
       pagesCrawled: 0,
       structuredDataFound: 0,
@@ -46,7 +46,7 @@ export function useCrawler() {
       const onData = (newData: StructuredDataItem[]) => {
         results.push(...newData);
         setCrawlData([...results]);
-        setGroupedData(groupStructuredData([...results]));
+        setSnippetData(groupStructuredData([...results]));
       };
 
       await crawlDomain(domain, options, {
@@ -90,7 +90,7 @@ export function useCrawler() {
 
   return {
     crawlData,
-    groupedData,
+    snippetData,
     isLoading,
     error,
     stats,

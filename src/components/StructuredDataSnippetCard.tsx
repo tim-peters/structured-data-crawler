@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { StructuredDataGroup, StructuredDataItem } from '../types/crawler';
+import { StructuredDataSnippet, StructuredDataItem } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
-import { findRelatedGroups } from '../services/dataGrouper';
+import { findRelatedSnippets } from '../services/dataGrouper';
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -14,29 +14,29 @@ import {
   Users
 } from 'lucide-react';
 
-interface StructuredDataGroupCardProps {
-  group: StructuredDataGroup;
-  allGroups: StructuredDataGroup[];
+interface StructuredDataSnippetCardProps {
+  snippet: StructuredDataSnippet;
+  allSnippets: StructuredDataSnippet[];
   currentFormatFilter?: string;
 }
 
-export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter = 'all' }: StructuredDataGroupCardProps) {
+export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatFilter = 'all' }: StructuredDataSnippetCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showConnections, setShowConnections] = useState(false);
   const [showAllUrls, setShowAllUrls] = useState(false);
-  const [showRelatedGroups, setShowRelatedGroups] = useState(false);
+  const [showRelatedSnippets, setShowRelatedSnippets] = useState(false);
 
-  const allRelatedGroups = findRelatedGroups(group, allGroups);
-  const relatedGroups = currentFormatFilter === 'all' 
-    ? allRelatedGroups 
-    : allRelatedGroups.filter(relatedGroup => relatedGroup.format === currentFormatFilter);
-  const uniqueUrls = [...new Set(group.items.map(item => item.url))];
+  const allRelatedSnippets = findRelatedSnippets(snippet, allSnippets);
+  const relatedSnippets = currentFormatFilter === 'all' 
+    ? allRelatedSnippets 
+    : allRelatedSnippets.filter(relatedSnippet => relatedSnippet.format === currentFormatFilter);
+  const uniqueUrls = [...new Set(snippet.items.map(item => item.url))];
 
-  // Helper function to extract descriptive name from structured data
-  const getDescriptiveName = (group: StructuredDataGroup): string => {
-    if (!group.items || group.items.length === 0) return '';
+  // Helper function to extract descriptive name from structured data  
+  const getDescriptiveName = (snippet: StructuredDataSnippet): string => {
+    if (!snippet.items || snippet.items.length === 0) return '';
     
-    const data = group.items[0].data;
+    const data = snippet.items[0].data;
     
     // Try different common attributes in order of preference
     const candidates = [
@@ -76,6 +76,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
     
     return '';
   };
+
   const formatBadgeColor = (format: string) => {
     const colors = {
       'JSON-LD': 'bg-blue-100 text-blue-800',
@@ -103,10 +104,10 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
 
   return (
     <div 
-      id={`group-${group.hash}`}
+      id={`snippet-${snippet.hash}`}
       className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
     >
-      {/* Group Header */}
+      {/* Snippet Header */}
       <div className="p-6 pb-0">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -115,11 +116,11 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
                 <Database className="w-5 h-5 text-slate-600" />
               </div>
               {/* Add descriptiveName as a title */}
-              {getDescriptiveName(group) && (
+              {getDescriptiveName(snippet) && (
                 <p className="text-lg font-medium text-slate-900 mb-2">
-                  {getDescriptiveName(group).length > 60
-                    ? `${getDescriptiveName(group).substring(0, 60)}...`
-                    : getDescriptiveName(group)}
+                  {getDescriptiveName(snippet).length > 60
+                    ? `${getDescriptiveName(snippet).substring(0, 60)}...`
+                    : getDescriptiveName(snippet)}
                 </p>
               )}
               {/*<div>
@@ -178,24 +179,23 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* Group Items */}
+      {/* Snippet Items */}
       <div className="p-6">
         <div className="space-y-4">
-          {group.items.length > 0 && (
+          {snippet.items.length > 0 && (
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <StructuredDataCard item={group.items[0]} compact />
+              <StructuredDataCard item={snippet.items[0]} compact />
             </div>
           )}
         </div>
       </div>
 
       {/* Connections */}
-      {group.connections.length > 0 && (
-        <div id={`connections-${group.hash}`} className="px-6 py-4 bg-slate-50 border-b border-slate-100">
+      {snippet.connections.length > 0 && (
+        <div id={`connections-${snippet.hash}`} className="px-6 py-4 bg-slate-50 border-b border-slate-100">
           <button
             onClick={() => setShowConnections(!showConnections)}
             className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
@@ -206,12 +206,12 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
               <ChevronRight className="w-4 h-4" />
             )}
             <GitBranch className="w-4 h-4" />
-            <span>Connections ({group.connections.length})</span>
+            <span>Connections ({snippet.connections.length})</span>
           </button>
 
           {showConnections && (
             <div className="mt-3 space-y-2">
-              {group.connections.map((connection, index) => (
+              {snippet.connections.map((connection, index) => (
                 <div
                   key={index}
                   className={`flex items-center justify-between p-3 rounded-lg border ${connectionTypeColor(connection.type)}`}
@@ -241,50 +241,50 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
         </div>
       )}
 
-      {/* Related Groups */}
-      {relatedGroups.length > 0 && (
-        <div id={`related-groups-${group.hash}`} className="px-6 py-4 bg-blue-50 border-t border-slate-100">
+      {/* Related Snippets */}
+      {relatedSnippets.length > 0 && (
+        <div id={`related-snippets-${snippet.hash}`} className="px-6 py-4 bg-blue-50 border-t border-slate-100">
           <button
-            onClick={() => setShowRelatedGroups(!showRelatedGroups)}
+            onClick={() => setShowRelatedSnippets(!showRelatedSnippets)}
             className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors mb-3"
           >
-            {showRelatedGroups ? (
+            {showRelatedSnippets ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
             <Link className="w-4 h-4" />
-            <span>Related Snippets ({relatedGroups.length})</span>
+            <span>Related Snippets ({relatedSnippets.length})</span>
           </button>
-          {showRelatedGroups && (
+          {showRelatedSnippets && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {relatedGroups.map((relatedGroup) => {
-                const descriptiveName = getDescriptiveName(relatedGroup);
+              {relatedSnippets.map((relatedSnippet) => {
+                const descriptiveName = getDescriptiveName(relatedSnippet);
                 return (
                   <a
-                    href={`#group-${relatedGroup.hash}`}
-                    key={relatedGroup.hash}
+                    href={`#snippet-${relatedSnippet.hash}`}
+                    key={relatedSnippet.hash}
                     className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedGroup.format)}`}>
-                          {relatedGroup.format}
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedSnippet.format)}`}>
+                          {relatedSnippet.format}
                         </span>
                       </div>
                       {descriptiveName && (
-                        <p className="text-sm font-medium text-slate-800 mb-1 line-clamp-2">
-                          {descriptiveName.length > 60 ? `${descriptiveName.substring(0, 60)}...` : descriptiveName}
+                        <p className="text-sm font-medium text-slate-900 truncate flex-1 mx-2">
+                          {descriptiveName.length > 30 ? `${descriptiveName.substring(0, 30)}...` : descriptiveName}
                         </p>
                       )}
                       <Link className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
                     </div>
                     <p className="text-xs text-slate-500 font-mono">
-                      {relatedGroup.type}
+                      {relatedSnippet.type}
                     </p>
-                    {relatedGroup.duplicateCount > 1 && (
+                    {relatedSnippet.duplicateCount > 1 && (
                       <p className="text-xs text-amber-600 mt-1">
-                        {relatedGroup.duplicateCount} duplicates
+                        {relatedSnippet.duplicateCount} duplicates
                       </p>
                     )}
                   </a>
