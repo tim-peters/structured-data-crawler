@@ -343,8 +343,13 @@ function extractLinks(html: string, baseUrl: string, baseDomain: string): string
     }
     
     // Only include links from the same domain
-    if (absoluteUrl.includes(baseDomain)) {
-      links.push(absoluteUrl);
+    try {
+      const linkDomain = new URL(absoluteUrl).hostname.replace(/^www\./, '');
+      if (linkDomain === baseDomain) {
+        links.push(absoluteUrl);
+      }
+    } catch {
+      continue;
     }
   }
 
