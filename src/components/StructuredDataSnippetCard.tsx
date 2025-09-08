@@ -133,7 +133,7 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
                 {(() => {
                   switch (snippet.type) {
                   case 'OpenGraph':
-                    return <Link className="w-5 h-5 text-blue-500" />;
+                    return <Link className="w-5 h-5 text-orange-500" />;
                   case 'TwitterCard':
                     return <Bird className="w-5 h-5 text-cyan-500" />;
                   case 'Article':
@@ -141,49 +141,49 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
                   case 'BlogPosting':
                     return <Newspaper className="w-5 h-5 text-slate-600" />;
                   case 'Book':
-                    return <Book className="w-5 h-5 text-indigo-600" />;
+                    return <Book className="w-5 h-5 text-slate-600" />;
                   case 'Event':
-                    return <Calendar className="w-5 h-5 text-purple-600" />;
+                    return <Calendar className="w-5 h-5 text-slate-600" />;
                   case 'FAQ':
-                    return <HelpCircle className="w-5 h-5 text-yellow-600" />;
+                    return <HelpCircle className="w-5 h-5 text-slate-600" />;
                   case 'HowTo':
-                    return <Hammer className="w-5 h-5 text-orange-600" />;
+                    return <Hammer className="w-5 h-5 text-slate-600" />;
                   case 'JobPosting':
-                    return <Briefcase className="w-5 h-5 text-pink-600" />;
+                    return <Briefcase className="w-5 h-5 text-slate-600" />;
                   case 'LocalBusiness':
                   case 'Restaurant':
-                    return <Store className="w-5 h-5 text-amber-600" />;
+                    return <Store className="w-5 h-5 text-slate-600" />;
                   case 'Movie':
-                    return <Film className="w-5 h-5 text-red-600" />;
+                    return <Film className="w-5 h-5 text-slate-600" />;
                   case 'Organization':
                     return <GitBranch className="w-5 h-5 text-slate-600" />;
                   case 'Person':
                   case 'ProfilePage':
                     return <Users className="w-5 h-5 text-slate-600" />;
                   case 'Product':
-                    return <Package className="w-5 h-5 text-green-700" />;
+                    return <Package className="w-5 h-5 text-slate-600" />;
                   case 'Recipe':
-                    return <ChefHat className="w-5 h-5 text-orange-700" />;
+                    return <ChefHat className="w-5 h-5 text-slate-600" />;
                   case 'Review':
-                    return <Star className="w-5 h-5 text-yellow-500" />;
+                    return <Star className="w-5 h-5 text-slate-600" />;
                   case 'VideoObject':
-                    return <Play className="w-5 h-5 text-red-500" />;
+                    return <Play className="w-5 h-5 text-slate-600" />;
                   case 'WebPage':
                     return <FileText className="w-5 h-5 text-slate-600" />;
                   case 'WebSite':
-                    return <Globe className="w-5 h-5 text-blue-600" />;
+                    return <Globe className="w-5 h-5 text-slate-600" />;
                   case 'BreadcrumbList':
-                    return <List className="w-5 h-5 text-slate-500" />;
+                    return <List className="w-5 h-5 text-slate-600" />;
                   case 'Offer':
-                    return <Tag className="w-5 h-5 text-green-500" />;
+                    return <Tag className="w-5 h-5 text-slate-600" />;
                   case 'AggregateRating':
-                    return <Star className="w-5 h-5 text-yellow-600" />;
+                    return <Star className="w-5 h-5 text-slate-600" />;
                   case 'CreativeWork':
-                    return <PenLine className="w-5 h-5 text-indigo-500" />;
+                    return <PenLine className="w-5 h-5 text-slate-600" />;
                   case 'ImageObject':
-                    return <Image className="w-5 h-5 text-pink-500" />;
+                    return <Image className="w-5 h-5 text-slate-600" />;
                   case 'Podcast':
-                    return <Mic className="w-5 h-5 text-purple-500" />;
+                    return <Mic className="w-5 h-5 text-slate-600" />;
                   default:
                     return <Database className="w-5 h-5 text-slate-600" />;
                   }
