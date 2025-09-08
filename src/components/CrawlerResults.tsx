@@ -140,7 +140,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
           <p className="text-slate-600 mt-1">
             Found {data.length} occurrences
             {viewMode !== 'byOccurrence' && viewMode !== 'byUrl' && ` of ${snippetData.length} snippets`}
-            {viewMode === 'byType' && ` (${byTypeData.length} types)`}
+            {viewMode === 'byType' && ` (of ${byTypeData.length} types)`}
             {viewMode === 'byUrl' && ` across ${byUrlData.length} URLs`}
           </p>
         </div>
@@ -181,7 +181,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
               }`}
             >
               <Group className="w-4 h-4" />
-              <span>By Snippet</span>
+              <span>All Snippet</span>
             </button>
             {/* By Occurrence */}
             <button
@@ -193,7 +193,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
               }`}
             >
               <List className="w-4 h-4" />
-              <span>By Occurrence</span>
+              <span>All Occurrences</span>
             </button>
           </div>
           
@@ -275,13 +275,15 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
             {byTypeData.map(([categoryKey, snippets]) => (
               <div key={categoryKey} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
-                    {getSnippetIcon(snippets[0].type, TreePine, "w-5 h-5 text-slate-600")}
-                    <span>{categoryKey}</span>
-                    <span className="text-sm font-normal text-slate-500">
-                      ({snippets.length} snippet{snippets.length !== 1 ? 's' : ''})
-                    </span>
-                  </h3>
+                  <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-1 flex items-center space-x-2">
+                      {getSnippetIcon(snippets[0].type, TreePine, "w-5 h-5 text-slate-600")}
+                      <span>{categoryKey}</span>
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      {snippets.length} individual structured data (snippet{snippets.length !== 1 ? 's' : ''})
+                    </p>
+                  </div>
                   <button
                     onClick={() => toggleCategory(categoryKey)}
                     className="flex items-center space-x-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
@@ -351,7 +353,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
                       <span className="truncate">{url}</span>
                     </h3>
                     <p className="text-sm text-slate-500">
-                      {items.length} structured data item{items.length !== 1 ? 's' : ''}
+                      {items.length} structured data item{items.length !== 1 ? 's' : ''} (occurence{items.length !== 1 ? 's' : ''})
                     </p>
                   </div>
                   <button
