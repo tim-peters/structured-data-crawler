@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StructuredDataItem } from '../types/crawler';
+import { getSnippetIcon } from '../utils/iconUtils';
 import { ExternalLink, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
 
 interface StructuredDataCardProps {
@@ -52,6 +53,7 @@ export function StructuredDataCard({ item, compact = false, showUrl = false }: S
                 rel="noopener noreferrer"
                 className={`text-blue-600 hover:text-blue-800 font-medium ${compact ? 'text-xs' : 'text-sm'} flex items-center space-x-1 group mb-4`}
               >
+                {getSnippetIcon(item.type, undefined, "w-4 h-4 text-blue-600 flex-shrink-0")}
                 <span className="truncate">{item.url}</span>
                 <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
               </a>

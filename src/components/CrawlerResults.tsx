@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { StructuredDataItem, StructuredDataSnippet } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
 import { StructuredDataSnippetCard } from './StructuredDataSnippetCard';
+import { getSnippetIcon } from '../utils/iconUtils';
 import { Filter, Search, Download, Eye, Group, List, TreePine, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface CrawlerResultsProps {
@@ -248,7 +249,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
               <div key={categoryKey} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
-                    <TreePine className="w-5 h-5 text-slate-600" />
+                    {getSnippetIcon(snippets[0].type, TreePine, "w-5 h-5 text-slate-600")}
                     <span>{categoryKey}</span>
                     <span className="text-sm font-normal text-slate-500">
                       ({snippets.length} snippet{snippets.length !== 1 ? 's' : ''})
