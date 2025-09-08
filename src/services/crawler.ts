@@ -136,29 +136,17 @@ async function fetchWithCorsHandling(url: string, timeout: number = 10000): Prom
 }
 
 async function fetchThroughLocalProxy(url: string): Promise<string> {
-  try {
-    // Use GET with ?csurl= for compatibility with proxy.php
-    const proxyUrl = `${LOCAL_PHP_PROXY}?csurl=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'User-Agent': 'StructuredDataCrawler/1.0'
-      }
-    });
+  const proxyUrl = `${LOCAL_PHP_PROXY}?csurl=${encodeURIComponent(url)}`;
+  const response = await fetch(proxyUrl, {
+    method: 'GET'
+    // No custom headers required for basic proxy usage
+  });
 
-    if (response.ok) {
-      const html = await response.text();
-      if (html && html.trim().length > 0) {
-        return html;
-      }
-    }
-
+  if (!response.ok) {
     throw new Error(`Local PHP proxy failed with status: ${response.status}`);
-  } catch (err) {
-    console.warn(`Local PHP proxy failed for ${url}:`, err);
-    throw err;
   }
+
+  return await response.text();
 }
 
 async function fetchThroughPublicProxies(url: string): Promise<string> {
