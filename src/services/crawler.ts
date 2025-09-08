@@ -2,7 +2,6 @@ import { StructuredDataItem } from '../types/crawler';
 import { CrawlOptions } from '../components/CrawlerForm';
 import { extractStructuredData } from './structuredDataExtractor';
 import { parseRobotsTxt } from './robotsParser';
-import { fetchThroughProxy } from './corsProxy';
 
 function normalizeUrl(url: string): string {
   try {
@@ -76,6 +75,95 @@ interface CrawlState {
   robotsRules: Map<string, boolean>;
 }
 
+// Cache for domains that require CORS proxy
+const corsProxyCache = new Map<string, boolean>();
+
+// List of public CORS proxies to try
+const CORS_PROXIES = [
+  'https://api.allorigins.win/get?url=',
+  'https://corsproxy.io/?'
+];
+
+async function fetchWithCorsHandling(url: string, timeout: number = 10000): Promise<string> {
+  const urlObj = new URL(url);
+  const domain = urlObj.hostname;
+  
+  // Check if we know this domain requires CORS proxy
+  if (corsProxyCache.get(domain)) {
+    return await fetchThroughProxy(url);
+  }
+  
+  // Try direct fetch first
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'StructuredDataCrawler/1.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Cache-Control': 'no-cache'
+      },
+      mode: 'cors'
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/html')) {
+      throw new Error('Response is not HTML');
+    }
+
+    return await response.text();
+  } catch (err: any) {
+    // If it's a CORS error, cache this domain and use proxy
+    if (err.name === 'TypeError' || err.message.includes('CORS') || err.message.includes('fetch')) {
+      console.log(`CORS issue detected for ${domain}, switching to proxy`);
+      corsProxyCache.set(domain, true);
+      return await fetchThroughProxy(url);
+    }
+    throw err;
+  }
+}
+
+async function fetchThroughProxy(url: string): Promise<string> {
+  const encodedUrl = encodeURIComponent(url);
+  
+  for (const proxyBase of CORS_PROXIES) {
+    try {
+      const proxyUrl = proxyBase + encodedUrl;
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'Accept': 'application/json,text/html,*/*',
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Handle different proxy response formats
+        if (data.contents) {
+          return data.contents; // allorigins format
+        } else if (typeof data === 'string') {
+          return data; // corsproxy format
+        } else if (data.data) {
+          return data.data;
+        }
+      }
+    } catch (err) {
+      console.warn(`Proxy ${proxyBase} failed for ${url}:`, err);
+      continue; // Try next proxy
+    }
+  }
+  
+  throw new Error(`All CORS proxies failed for ${url}`);
+}
+
 export async function crawlDomain(
   domain: string,
   options: CrawlOptions,
@@ -100,10 +188,12 @@ export async function crawlDomain(
   if (options.respectRobots) {
     try {
       const robotsUrl = `${urlObj.protocol}//${urlObj.host}/robots.txt`;
-      const robotsResponse = await fetchWithTimeout(robotsUrl, 5000);
-      if (robotsResponse.ok) {
-        const robotsText = await robotsResponse.text();
+      try {
+        const robotsText = await fetchWithCorsHandling(robotsUrl, 5000);
         state.robotsRules = parseRobotsTxt(robotsText);
+      } catch (err) {
+        // If robots.txt fails, continue without it
+        console.warn('Could not fetch robots.txt:', err);
       }
     } catch (err) {
       console.warn('Could not fetch robots.txt:', err);
@@ -133,7 +223,7 @@ export async function crawlDomain(
         await new Promise(resolve => setTimeout(resolve, options.delay));
       }
 
-      const html = await fetchPage(url);
+      const html = await fetchWithCorsHandling(url);
       
       // Check for canonical URL and use it if different
       const canonicalUrl = extractCanonicalUrl(html, url);
@@ -172,52 +262,6 @@ export async function crawlDomain(
       console.warn(`Failed to crawl ${url}:`, err);
       // Continue with next URL instead of failing completely
     }
-  }
-}
-
-async function fetchPage(url: string): Promise<string> {
-  try {
-    // Try direct fetch first
-    const response = await fetchWithTimeout(url, 10000);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('text/html')) {
-      throw new Error('Response is not HTML');
-    }
-
-    return await response.text();
-  } catch (err) {
-    // If direct fetch fails due to CORS, try proxy
-    console.warn(`Direct fetch failed for ${url}, trying proxy...`);
-    return await fetchThroughProxy(url);
-  }
-}
-
-async function fetchWithTimeout(url: string, timeout: number): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'StructuredDataCrawler/1.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Cache-Control': 'no-cache'
-      },
-      mode: 'cors'
-    });
-    
-    clearTimeout(timeoutId);
-    return response;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
   }
 }
 
