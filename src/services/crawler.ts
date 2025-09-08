@@ -78,7 +78,10 @@ interface CrawlState {
 // Cache for domains that require CORS proxy
 const corsProxyCache = new Map<string, boolean>();
 
-// List of public CORS proxies to try
+// Local PHP proxy configuration
+const LOCAL_PHP_PROXY = 'http://localhost:8000/proxy.php';
+
+// List of public CORS proxies to try as fallback
 const CORS_PROXIES = [
   'https://api.allorigins.win/get?url=',
   'https://corsproxy.io/?'
@@ -90,7 +93,7 @@ async function fetchWithCorsHandling(url: string, timeout: number = 10000): Prom
   
   // Check if we know this domain requires CORS proxy
   if (corsProxyCache.get(domain)) {
-    return await fetchThroughProxy(url);
+    return await fetchThroughProxies(url);
   }
   
   // Try direct fetch first
@@ -126,13 +129,39 @@ async function fetchWithCorsHandling(url: string, timeout: number = 10000): Prom
     if (err.name === 'TypeError' || err.message.includes('CORS') || err.message.includes('fetch')) {
       console.log(`CORS issue detected for ${domain}, switching to proxy`);
       corsProxyCache.set(domain, true);
-      return await fetchThroughProxy(url);
+      return await fetchThroughProxies(url);
     }
     throw err;
   }
 }
 
-async function fetchThroughProxy(url: string): Promise<string> {
+async function fetchThroughLocalProxy(url: string): Promise<string> {
+  try {
+    // Use GET with ?csurl= for compatibility with proxy.php
+    const proxyUrl = `${LOCAL_PHP_PROXY}?csurl=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'User-Agent': 'StructuredDataCrawler/1.0'
+      }
+    });
+
+    if (response.ok) {
+      const html = await response.text();
+      if (html && html.trim().length > 0) {
+        return html;
+      }
+    }
+
+    throw new Error(`Local PHP proxy failed with status: ${response.status}`);
+  } catch (err) {
+    console.warn(`Local PHP proxy failed for ${url}:`, err);
+    throw err;
+  }
+}
+
+async function fetchThroughPublicProxies(url: string): Promise<string> {
   const encodedUrl = encodeURIComponent(url);
   
   for (const proxyBase of CORS_PROXIES) {
@@ -162,6 +191,18 @@ async function fetchThroughProxy(url: string): Promise<string> {
   }
   
   throw new Error(`All CORS proxies failed for ${url}`);
+}
+
+async function fetchThroughProxies(url: string): Promise<string> {
+  // First try local PHP proxy
+  try {
+    return await fetchThroughLocalProxy(url);
+  } catch (err) {
+    console.warn(`Local PHP proxy failed, trying public proxies for ${url}`);
+  }
+  
+  // Fall back to public proxies
+  return await fetchThroughPublicProxies(url);
 }
 
 export async function crawlDomain(
