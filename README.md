@@ -54,9 +54,9 @@ For better performance and reliability, you can run a local PHP proxy server to 
 
 ### Starting the PHP Proxy
 
-1. Navigate to the `proxy` directory:
+1. Navigate to the `public` directory:
 ```bash
-cd proxy
+cd public
 ```
 
 2. Start the PHP development server:
