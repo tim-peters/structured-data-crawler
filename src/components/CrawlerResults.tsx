@@ -3,7 +3,7 @@ import { StructuredDataItem, StructuredDataSnippet } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
 import { StructuredDataSnippetCard } from './StructuredDataSnippetCard';
 import { getSnippetIcon } from '../utils/iconUtils';
-import { Filter, Search, Download, Eye, Group, List, TreePine, ChevronDown, ChevronRight } from 'lucide-react';
+import { Filter, Search, Download, Eye, Group, List, TreePine, ChevronDown, ChevronRight, Globe } from 'lucide-react';
 
 interface CrawlerResultsProps {
   data: StructuredDataItem[];
@@ -14,8 +14,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedFormat, setSelectedFormat] = useState<string>('all');
-  // Change default view to 'byType' (now "By Type")
-  const [viewMode, setViewMode] = useState<'byType' | 'bySnippet' | 'byOccurrence'>('byType');
+  const [viewMode, setViewMode] = useState<'byUrl' | 'byType' | 'bySnippet' | 'byOccurrence'>('byUrl');
   
   // Get unique types and formats
   const { types, formats } = useMemo(() => {
@@ -78,6 +77,18 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
     return Object.entries(hierarchy).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredSnippetData]);
 
+  // Create by URL view data
+  const byUrlData = useMemo(() => {
+    const urlGroups: { [key: string]: StructuredDataItem[] } = {};
+    filteredData.forEach(item => {
+      if (!urlGroups[item.url]) {
+        urlGroups[item.url] = [];
+      }
+      urlGroups[item.url].push(item);
+    });
+    return Object.entries(urlGroups).sort(([a], [b]) => a.localeCompare(b));
+  }, [filteredData]);
+
   // Set all categories expanded by default
   const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({});
 
@@ -86,8 +97,11 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
     byTypeData.forEach(([categoryKey]) => {
       initial[categoryKey] = true;
     });
+    byUrlData.forEach(([url]) => {
+      initial[url] = true;
+    });
     setExpandedCategories(initial);
-  }, [byTypeData]);
+  }, [byTypeData, byUrlData]);
 
   const exportData = () => {
     const exportObj = {
@@ -124,15 +138,28 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
             Discovered Structured Data
           </h2>
           <p className="text-slate-600 mt-1">
-            Found {data.length} occurences
-            {viewMode !== 'byOccurrence' && ` of ${snippetData.length} snippets`}
+            Found {data.length} occurrences
+            {viewMode !== 'byOccurrence' && viewMode !== 'byUrl' && ` of ${snippetData.length} snippets`}
             {viewMode === 'byType' && ` (${byTypeData.length} types)`}
+            {viewMode === 'byUrl' && ` across ${byUrlData.length} URLs`}
           </p>
         </div>
         <div className="flex items-center space-x-3">
           {/* View Mode Toggle */}
           <div className="flex items-center bg-slate-100 rounded-lg p-1">
-            {/* By Type - now first */}
+            {/* By URL - NEW */}
+            <button
+              onClick={() => setViewMode('byUrl')}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'byUrl'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              <span>By URL</span>
+            </button>
+            {/* By Type */}
             <button
               onClick={() => setViewMode('byType')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -144,7 +171,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
               <TreePine className="w-4 h-4" />
               <span>By Type</span>
             </button>
-            {/* By Snippet - now second */}
+            {/* By Snippet */}
             <button
               onClick={() => setViewMode('bySnippet')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -156,7 +183,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
               <Group className="w-4 h-4" />
               <span>By Snippet</span>
             </button>
-            {/* By Occurrence - now third */}
+            {/* By Occurrence */}
             <button
               onClick={() => setViewMode('byOccurrence')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -307,6 +334,59 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
           <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
             <Eye className="w-12 h-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-700 mb-2">No Snippets Found</h3>
+            <p className="text-slate-500">
+              Try adjusting your search terms or filters to see more results.
+            </p>
+          </div>
+        )
+      ) : viewMode === 'byUrl' ? (
+        byUrlData.length > 0 ? (
+          <div className="space-y-8">
+            {byUrlData.map(([url, items]) => (
+              <div key={url} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-slate-900 mb-1 flex items-center space-x-2">
+                      <Globe className="w-5 h-5 text-slate-600" />
+                      <span className="truncate">{url}</span>
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      {items.length} structured data item{items.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleCategory(url)}
+                    className="flex items-center space-x-2 text-sm text-slate-600 hover:text-slate-900 transition-colors ml-4"
+                  >
+                    {expandedCategories[url] ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                    <span>{expandedCategories[url] ? 'Hide' : 'Show'} Items</span>
+                  </button>
+                </div>
+                {expandedCategories[url] && (
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {items.map((item, index) => (
+                        <StructuredDataCard 
+                          key={`${item.url}-${index}`} 
+                          item={item} 
+                          compact 
+                          showUrl={false}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+            <Globe className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">No URLs Found</h3>
             <p className="text-slate-500">
               Try adjusting your search terms or filters to see more results.
             </p>
