@@ -306,43 +306,32 @@ export async function crawlDomain(
 }
 
 function extractLinks(html: string, baseUrl: string, baseDomain: string): string[] {
+  // Improved regex: matches href and src, with or without quotes
+  const linkRegex = /(?:href|src)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>"']+))/gi;
   const links: string[] = [];
-  const linkRegex = /<a[^>]+href=["']([^"']+)["'][^>]*>/gi;
-  let match;
+  let match: RegExpExecArray | null;
 
   while ((match = linkRegex.exec(html)) !== null) {
+    const url = match[1] || match[2] || match[3];
+    if (!url) continue;
+    // Ignore anchors and javascript
+    if (url.startsWith('#') || url.startsWith('mailto:') || url.startsWith('javascript:') || url.startsWith('tel:')) continue;
+    // Normalize relative URLs
+    let absoluteUrl = url;
     try {
-      const href = match[1];
-      let absoluteUrl: string;
-
-      if (href.startsWith('http')) {
-        absoluteUrl = href;
-      } else if (href.startsWith('/')) {
-        const baseUrlObj = new URL(baseUrl);
-        absoluteUrl = `${baseUrlObj.protocol}//${baseUrlObj.host}${href}`;
-      } else if (href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
-        continue; // Skip anchors and non-http links
-      } else {
-        absoluteUrl = new URL(href, baseUrl).href;
-      }
-
-      const normalizedUrl = normalizeUrl(absoluteUrl, baseDomain);
-      const urlObj = new URL(normalizedUrl);
-      const urlDomain = urlObj.hostname.startsWith('www.') ? urlObj.hostname.substring(4) : urlObj.hostname;
-      
-      // Only crawl same domain
-      if (urlDomain === baseDomain) {
-        if (!links.includes(normalizedUrl)) {
-          links.push(normalizedUrl);
-        }
-      }
-    } catch (err) {
-      // Skip invalid URLs
+      absoluteUrl = new URL(url, baseUrl).href;
+    } catch {
+      // skip invalid URLs
       continue;
+    }
+    // Only include links from the same domain
+    if (absoluteUrl.includes(baseDomain)) {
+      links.push(absoluteUrl);
     }
   }
 
-  return links;
+  // Remove duplicates
+  return Array.from(new Set(links));
 }
 
 function isAllowedByRobots(url: string, robotsRules: Map<string, boolean>): boolean {
