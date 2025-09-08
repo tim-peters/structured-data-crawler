@@ -86,7 +86,10 @@ interface CrawlState {
 const corsProxyCache = new Map<string, boolean>();
 
 // Local PHP proxy configuration
-const LOCAL_PHP_PROXY = 'http://localhost:8000/proxy.php';
+const LOCAL_PHP_PROXY =
+  import.meta.env.MODE === 'production'
+    ? '/proxy.php'
+    : 'http://localhost:8000/proxy.php';
 
 // List of public CORS proxies to try as fallback
 const CORS_PROXIES = [
