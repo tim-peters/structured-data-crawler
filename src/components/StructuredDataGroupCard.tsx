@@ -23,7 +23,6 @@ interface StructuredDataGroupCardProps {
 export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter = 'all' }: StructuredDataGroupCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showConnections, setShowConnections] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [showAllUrls, setShowAllUrls] = useState(false);
   const [showRelatedGroups, setShowRelatedGroups] = useState(false);
 
@@ -100,32 +99,6 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
       'publisher': 'bg-indigo-50 text-indigo-700 border-indigo-200'
     };
     return colors[type as keyof typeof colors] || 'bg-slate-50 text-slate-700 border-slate-200';
-  };
-
-  const copyToClipboard = async () => {
-    try {
-      const exportData = {
-        group: {
-          hash: group.hash,
-          type: group.type,
-          format: group.format,
-          duplicateCount: group.duplicateCount,
-          connections: group.connections
-        },
-        items: group.items,
-        relatedGroups: relatedGroups.map(g => ({
-          hash: g.hash,
-          type: g.type,
-          duplicateCount: g.duplicateCount
-        }))
-      };
-      
-      await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
   };
 
   return (

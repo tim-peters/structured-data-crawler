@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StructuredDataItem } from '../types/crawler';
-import { ExternalLink, Code, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
 
 interface StructuredDataCardProps {
   item: StructuredDataItem;
