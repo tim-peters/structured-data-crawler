@@ -209,9 +209,10 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
           {showConnections && (
             <div className="mt-3 space-y-2">
               {snippet.connections.map((connection, index) => (
-                <div
+                <a
+                  href={`#snippet-${connection.targetHash}`}
                   key={index}
-                  className={`flex items-center justify-between p-3 rounded-lg border ${connectionTypeColor(connection.type)}`}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${connectionTypeColor(connection.type)} hover:bg-blue-50 hover:text-slate-900 hover:border-blue-300 transition-colors`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
@@ -231,7 +232,7 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
                       Target: <code className="font-mono">{connection.targetHash}</code>
                     </div>
                   )}
-                </div>
+                </a>
               ))}
             </div>
           )}
