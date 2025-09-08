@@ -311,11 +311,28 @@ function extractLinks(html: string, baseUrl: string, baseDomain: string): string
   const links: string[] = [];
   let match: RegExpExecArray | null;
 
+  // File extensions that typically don't contain links
+  const nonLinkExtensions = [
+    '.css', '.js', '.csv', 
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+    '.zip', '.rar', '.7z', '.tar', '.gz',
+    '.jpg', '.jpeg', '.png', 'svg', '.gif', '.bmp', '.svg', '.webp', '.ico',
+    '.mp3', '.mp4', '.wav', '.avi', '.mov', '.wmv',
+    '.ttf', '.woff', '.woff2', '.eot', '.otf'
+  ];
+
   while ((match = linkRegex.exec(html)) !== null) {
     const url = match[1] || match[2] || match[3];
     if (!url) continue;
+    
     // Ignore anchors and javascript
     if (url.startsWith('#') || url.startsWith('mailto:') || url.startsWith('javascript:') || url.startsWith('tel:')) continue;
+    
+    // Check if URL has a file extension that doesn't contain links
+    const urlLower = url.toLowerCase();
+    const hasNonLinkExtension = nonLinkExtensions.some(ext => urlLower.endsWith(ext));
+    if (hasNonLinkExtension) continue;
+    
     // Normalize relative URLs
     let absoluteUrl = url;
     try {
@@ -324,6 +341,7 @@ function extractLinks(html: string, baseUrl: string, baseDomain: string): string
       // skip invalid URLs
       continue;
     }
+    
     // Only include links from the same domain
     if (absoluteUrl.includes(baseDomain)) {
       links.push(absoluteUrl);
