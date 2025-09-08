@@ -109,17 +109,17 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3 mb-3">
-                <div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg">
+                <div className="flex items-center justify-center h-10 px-3 bg-slate-100 rounded-lg">
                   {getSnippetIcon(snippet.type)}
-                </div>
-              {/* Add descriptiveName as a title */}
-              {getDescriptiveName(snippet) && (
-                <p className="text-lg font-medium text-slate-900 mb-2">
-                  {getDescriptiveName(snippet).length > 60
-                    ? `${getDescriptiveName(snippet).substring(0, 60)}...`
-                    : getDescriptiveName(snippet)}
-                </p>
-              )}
+                {/* Add descriptiveName as a title */}
+                {getDescriptiveName(snippet) && (
+                  <p className="text-lg font-medium text-slate-900 ml-2">
+                    {getDescriptiveName(snippet).length > 60
+                      ? `${getDescriptiveName(snippet).substring(0, 60)}...`
+                      : getDescriptiveName(snippet)}
+                  </p>
+                )}
+              </div>
               {/*<div>
                 <div className="flex items-center space-x-2 mb-1">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${formatBadgeColor(group.format)}`}>
@@ -277,9 +277,12 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
                       )}
                       <Link className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
                     </div>
-                    <p className="text-xs text-slate-500 font-mono">
-                      {relatedSnippet.type}
-                    </p>
+                    <div className="flex justify-end mb-2">
+                      {getSnippetIcon(relatedSnippet.type, undefined, "w-4 h-4 mr-1 text-slate-500 flex-shrink-0")}
+                      <p className="text-xs text-slate-500 font-mono">
+                        {relatedSnippet.type}
+                      </p>
+                    </div>
                     {relatedSnippet.duplicateCount > 1 && (
                       <p className="text-xs text-amber-600 mt-1">
                         {relatedSnippet.duplicateCount} duplicates
