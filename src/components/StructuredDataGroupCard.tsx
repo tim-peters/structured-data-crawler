@@ -254,7 +254,7 @@ export function StructuredDataGroupCard({ group, allGroups, currentFormatFilter 
               <ChevronRight className="w-4 h-4" />
             )}
             <Link className="w-4 h-4" />
-            <span>Related Groups ({relatedGroups.length})</span>
+            <span>Related Snippets ({relatedGroups.length})</span>
           </button>
           {showRelatedGroups && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

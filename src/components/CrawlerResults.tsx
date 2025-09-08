@@ -123,13 +123,9 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
             Discovered Structured Data
           </h2>
           <p className="text-slate-600 mt-1">
-            Found {data.length} items 
-            {viewMode === 'hierarchy' 
-              ? ` in ${groupedData.length} groups (showing ${hierarchicalData.length} categories)`
-              : viewMode === 'grouped'
-                ? ` in ${groupedData.length} groups`
-                : ``
-            }
+            Found {data.length} occurences
+            {viewMode !== 'individual' && ` of ${groupedData.length} snippets`}
+            {viewMode === 'hierarchy' && ` (${hierarchicalData.length} types)`}
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -145,7 +141,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
               }`}
             >
               <TreePine className="w-4 h-4" />
-              <span>Grouped By Type</span>
+              <span>Grouped by Type</span>
             </button>
             {/* Grouped (Individual View) - now second */}
             <button
@@ -157,7 +153,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
               }`}
             >
               <Group className="w-4 h-4" />
-              <span>Individual View</span>
+              <span>By Snippet</span>
             </button>
             {/* Individual (Raw View) - now third */}
             <button
@@ -169,7 +165,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
               }`}
             >
               <List className="w-4 h-4" />
-              <span>Raw View</span>
+              <span>All Occurences</span>
             </button>
           </div>
           
@@ -255,7 +251,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
                     <TreePine className="w-5 h-5 text-slate-600" />
                     <span>{categoryKey}</span>
                     <span className="text-sm font-normal text-slate-500">
-                      ({groups.length} group{groups.length !== 1 ? 's' : ''})
+                      ({groups.length} snippet{groups.length !== 1 ? 's' : ''})
                     </span>
                   </h3>
                   <button
@@ -267,7 +263,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
                     ) : (
                       <ChevronRight className="w-4 h-4" />
                     )}
-                    <span>{expandedCategories[categoryKey] ? 'Hide' : 'Show'} Groups</span>
+                    <span>{expandedCategories[categoryKey] ? 'Hide' : 'Show'} Snippets</span>
                   </button>
                 </div>
                 {expandedCategories[categoryKey] && (
@@ -309,7 +305,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
         ) : (
           <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
             <Eye className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-700 mb-2">No Groups Found</h3>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">No Snippets Found</h3>
             <p className="text-slate-500">
               Try adjusting your search terms or filters to see more results.
             </p>
@@ -319,7 +315,7 @@ export function CrawlerResults({ data, groupedData }: CrawlerResultsProps) {
         filteredData.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredData.map((item, index) => (
-            <StructuredDataCard key={`${item.url}-${index}`} item={item} />
+            <StructuredDataCard key={`${item.url}-${index}`} item={item} compact showUrl />
           ))}
         </div>
         ) : (

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { StructuredDataItem } from '../types/crawler';
-import { ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
 
 interface StructuredDataCardProps {
   item: StructuredDataItem;
   compact?: boolean;
+  showUrl?: boolean;
 }
 
-export function StructuredDataCard({ item, compact = false }: StructuredDataCardProps) {
+export function StructuredDataCard({ item, compact = false, showUrl = false }: StructuredDataCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -44,6 +45,17 @@ export function StructuredDataCard({ item, compact = false }: StructuredDataCard
       <div className={`${compact ? 'p-4' : 'p-6'} border-b border-slate-100`}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
+            {showUrl && (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`text-blue-600 hover:text-blue-800 font-medium ${compact ? 'text-xs' : 'text-sm'} flex items-center space-x-1 group mb-4`}
+              >
+                <span className="truncate">{item.url}</span>
+                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </a>
+            )}
             <div className="flex items-center space-x-2 mb-2">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${formatBadgeColor(item.format)}`}>
                 {item.format}
