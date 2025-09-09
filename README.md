@@ -20,18 +20,9 @@ A powerful web crawler that discovers and analyzes structured data across websit
 
 ## Quick Start
 
-### Prerequisites
+### How to Use
 
-- Node.js (version 16 or higher)
-- npm or yarn package manager
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd structured-data-crawler
-```
+1. Clone or download the repository and enter the main folder `structured-data-crawler` 
 
 2. Install dependencies:
 ```bash
@@ -44,6 +35,11 @@ npm run dev
 ```
 
 4. Open your browser and navigate to the provided local URL (typically `http://localhost:5173`)
+
+### Prerequisites
+
+- Node.js (version 16 or higher)
+- npm or yarn package manager
 
 ## Optional: Local PHP Proxy Setup
 
@@ -225,7 +221,7 @@ npm run lint
 
 1. **CORS Errors**: 
    - Start the local PHP proxy server
-   - Check that the proxy is running on `localhost:8000`
+   - Check that the proxy is running on `localhost:8000/proxy.php` or `/proxy.php` when running a build for production
    - Verify firewall settings aren't blocking the proxy
 
 2. **No Structured Data Found**:
