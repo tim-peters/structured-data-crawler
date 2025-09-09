@@ -3,7 +3,7 @@ import { StructuredDataItem, StructuredDataSnippet } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
 import { StructuredDataSnippetCard } from './StructuredDataSnippetCard';
 import { getSnippetIcon } from '../utils/iconUtils';
-import { Filter, Search, Download, Eye, Group, List, TreePine, ChevronDown, ChevronRight, Globe } from 'lucide-react';
+import { Filter, Search, Download, Eye, Group, List, TreePine, ChevronDown, ChevronRight, Globe, Menu } from 'lucide-react';
 
 interface CrawlerResultsProps {
   data: StructuredDataItem[];
@@ -15,6 +15,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedFormat, setSelectedFormat] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'byUrl' | 'byType' | 'bySnippet' | 'byOccurrence'>('byUrl');
+  const [showViewModeDropdown, setShowViewModeDropdown] = useState(false);
   
   // Get unique types and formats
   const { types, formats } = useMemo(() => {
@@ -129,6 +130,28 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
     }));
   };
 
+  const getViewModeLabel = () => {
+    switch (viewMode) {
+      case 'byUrl': return 'By URL';
+      case 'byType': return 'By Type';
+      case 'bySnippet': return 'All Snippet';
+      case 'byOccurrence': return 'All Occurrences';
+      default: return 'Select View';
+    }
+  };
+
+  const getViewModeIcon = () => {
+    switch (viewMode) {
+      case 'byUrl': return Globe;
+      case 'byType': return TreePine;
+      case 'bySnippet': return Group;
+      case 'byOccurrence': return List;
+      default: return Eye;
+    }
+  };
+
+  const ViewModeIcon = getViewModeIcon();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -145,9 +168,9 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-slate-100 rounded-lg p-1">
-            {/* By URL - NEW */}
+          {/* View Mode Toggle - Updated for mobile */}
+          <div className="hidden md:flex items-center bg-slate-100 rounded-lg p-1">
+            {/* By URL */}
             <button
               onClick={() => setViewMode('byUrl')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -196,10 +219,75 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
               <span>All Occurrences</span>
             </button>
           </div>
+
+          {/* Mobile View Mode Dropdown */}
+          <div className="md:hidden relative">
+            <button
+              onClick={() => setShowViewModeDropdown(!showViewModeDropdown)}
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-100 rounded-lg text-slate-900 font-medium"
+            >
+              <ViewModeIcon className="w-4 h-4" />
+              <span>{getViewModeLabel()}</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            
+            {showViewModeDropdown && (
+              <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
+                <button
+                  onClick={() => {
+                    setViewMode('byUrl');
+                    setShowViewModeDropdown(false);
+                  }}
+                  className={`flex items-center space-x-2 w-full px-4 py-2 text-left text-sm ${
+                    viewMode === 'byUrl' ? 'bg-slate-100 text-slate-900' : 'text-slate-700'
+                  }`}
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>By URL</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setViewMode('byType');
+                    setShowViewModeDropdown(false);
+                  }}
+                  className={`flex items-center space-x-2 w-full px-4 py-2 text-left text-sm ${
+                    viewMode === 'byType' ? 'bg-slate-100 text-slate-900' : 'text-slate-700'
+                  }`}
+                >
+                  <TreePine className="w-4 h-4" />
+                  <span>By Type</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setViewMode('bySnippet');
+                    setShowViewModeDropdown(false);
+                  }}
+                  className={`flex items-center space-x-2 w-full px-4 py-2 text-left text-sm ${
+                    viewMode === 'bySnippet' ? 'bg-slate-100 text-slate-900' : 'text-slate-700'
+                  }`}
+                >
+                  <Group className="w-4 h-4" />
+                  <span>All Snippet</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setViewMode('byOccurrence');
+                    setShowViewModeDropdown(false);
+                  }}
+                  className={`flex items-center space-x-2 w-full px-4 py-2 text-left text-sm ${
+                    viewMode === 'byOccurrence' ? 'bg-slate-100 text-slate-900' : 'text-slate-700'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                  <span>All Occurrences</span>
+                </button>
+              </div>
+            )}
+          </div>
           
           <button
             onClick={exportData}
-            className="flex items-center space-x-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
+            className="hidden md:flex items-center space-x-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
           >
             <Download className="w-4 h-4" />
             <span>Export JSON</span>
@@ -207,6 +295,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
         </div>
       </div>
 
+      {/* Rest of the component remains unchanged */}
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <div className="flex items-center space-x-2 mb-4">

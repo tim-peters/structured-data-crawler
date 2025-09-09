@@ -109,7 +109,7 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3 mb-3">
-                <div className="flex items-center justify-center h-10 px-3 bg-slate-100 rounded-lg">
+                <div className="flex items-center justify-center py-2 px-3 bg-slate-100 rounded-lg">
                   {getSnippetIcon(snippet.type)}
                 {/* Add descriptiveName as a title */}
                 {getDescriptiveName(snippet) && (
@@ -265,11 +265,6 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
                     className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedSnippet.format)}`}>
-                          {relatedSnippet.format}
-                        </span>
-                      </div>
                       {descriptiveName && (
                         <p className="text-sm font-medium text-slate-900 truncate flex-1 mx-2">
                           {descriptiveName.length > 30 ? `${descriptiveName.substring(0, 30)}...` : descriptiveName}
@@ -277,11 +272,16 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
                       )}
                       <Link className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
                     </div>
-                    <div className="flex justify-end mb-2">
-                      {getSnippetIcon(relatedSnippet.type, undefined, "w-4 h-4 mr-1 text-slate-500 flex-shrink-0")}
-                      <p className="text-xs text-slate-500 font-mono">
-                        {relatedSnippet.type}
-                      </p>
+                    <div className="flex justify-between mb-2">
+                      <div className="flex items-left space-x-2">
+                        {getSnippetIcon(relatedSnippet.type, undefined, "w-4 h-4 ml-2 text-slate-500 flex-shrink-0")}
+                        <p className="text-xs text-slate-500 font-mono">
+                          {relatedSnippet.type}
+                        </p>
+                      </div>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${formatBadgeColor(relatedSnippet.format)}`}>
+                        {relatedSnippet.format}
+                      </span>
                     </div>
                     {relatedSnippet.duplicateCount > 1 && (
                       <p className="text-xs text-amber-600 mt-1">
