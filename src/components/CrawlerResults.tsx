@@ -16,6 +16,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
   const [selectedFormat, setSelectedFormat] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'byUrl' | 'byType' | 'bySnippet' | 'byOccurrence'>('byUrl');
   const [showViewModeDropdown, setShowViewModeDropdown] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   
   // Get unique types and formats
   const { types, formats } = useMemo(() => {
@@ -295,64 +296,73 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
         </div>
       </div>
 
-      {/* Rest of the component remains unchanged */}
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <Filter className="w-5 h-5 text-slate-600" />
-          <h3 className="text-lg font-semibold text-slate-900">Filters</h3>
-        </div>
+      {/* Filters - Updated for mobile */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="w-full px-6 py-4 flex items-center justify-between text-left"
+        >
+          <div className="flex items-center space-x-2">
+            <Filter className="w-5 h-5 text-slate-600" />
+            <h3 className="text-lg font-semibold text-slate-900">Filters</h3>
+          </div>
+          <ChevronDown className={`md:hidden w-5 h-5 text-slate-600 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+        </button>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Search
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search URLs, types, or content..."
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+        <div className={`${showFilters ? 'block' : 'hidden'} md:block`}>
+          <div className="px-6 pb-6 md:pt-0 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Search
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search URLs, types, or content..."
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Data Type
+                </label>
+                <select
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Types</option>
+                  {types.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Format Filter */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Format
+                </label>
+                <select
+                  value={selectedFormat}
+                  onChange={(e) => setSelectedFormat(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Formats</option>
+                  {formats.map(format => (
+                    <option key={format} value={format}>{format}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-
-          {/* Type Filter */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Data Type
-            </label>
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Types</option>
-              {types.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Format Filter */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Format
-            </label>
-            <select
-              value={selectedFormat}
-              onChange={(e) => setSelectedFormat(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Formats</option>
-              {formats.map(format => (
-                <option key={format} value={format}>{format}</option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
