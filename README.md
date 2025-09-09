@@ -10,6 +10,7 @@ A powerful web crawler that discovers and analyzes structured data across websit
 - **Duplicate Prevention**: URL normalization prevents crawling the same page multiple times
 - **Canonical URL Support**: Respects canonical URLs to avoid duplicate content
 - **Multiple View Modes**: 
+  - **By Site**: Groups all structured data by their origin
   - **By Type**: Groups snippets by format and data type
   - **By Snippet**: Shows individual snippets with their relationships
   - **By Occurrence**: Lists all individual occurrences separately
@@ -87,6 +88,11 @@ The crawler will automatically detect and use the local PHP proxy when available
 ### Viewing Results
 
 The crawler provides three different view modes:
+
+#### By Site View
+- Groups snippets by their origin (site)
+- Expandable sites for easy navigation
+- Best for checking all structured data site by site
 
 #### By Type View
 - Groups snippets by their format (JSON-LD, Microdata, etc.) and data type
