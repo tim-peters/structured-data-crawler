@@ -15,8 +15,6 @@ interface StructuredDataCardProps {
 
 export function StructuredDataCard({ item, allData = [], compact = false, showUrl = false, currentFormatFilter = 'all'  }: StructuredDataCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showConnections, setShowConnections] = useState(false);
-  const [showRelatedSnippets, setShowRelatedSnippets] = useState(false);
   const [copied, setCopied] = useState(false);
   const { setViewMode } = useViewMode();
 
@@ -25,10 +23,29 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
   const currentSnippet = snippetData.find(snippet => snippet.hash === item.hash);
   const connections = currentSnippet?.connections || [];
   
-  const allRelatedSnippets = currentSnippet ? findRelatedSnippets(currentSnippet, snippetData) : [];
-  const relatedSnippets = currentFormatFilter === 'all' 
-    ? allRelatedSnippets 
-    : allRelatedSnippets.filter(relatedSnippet => relatedSnippet.format === currentFormatFilter);
+  const relatedSnippets = currentSnippet ? findRelatedSnippets(currentSnippet, snippetData) : [];
+
+  const handleConnectionClick = (targetHash: string) => {
+    // Switch to snippet view
+    setViewMode('bySnippet');
+    
+    // Scroll to the target snippet after a short delay to allow view change
+    setTimeout(() => {
+      const targetElement = document.getElementById(`snippet-${targetHash}`);
+      console.dir(targetElement);
+      if (targetElement) {
+        targetElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        // Add a highlight effect
+        targetElement.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        setTimeout(() => {
+          targetElement.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        }, 3000);
+      }
+    }, 100);
+  };
 
   const formatBadgeColor = (format: string) => {
     const colors = {
@@ -101,12 +118,7 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
           <div className="flex items-center space-x-4 text-sm mb-3">
             <a
               href={`#connections-${item.hash}`}
-              onClick={e => {
-                e.preventDefault();
-                setViewMode('bySnippet');
-                setShowConnections(!showConnections);
-                document.getElementById(`connections-${item.hash}`)?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => handleConnectionClick(item.hash)}
               className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
             >
               <Link className="w-4 h-4" />
@@ -115,12 +127,7 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
             {relatedSnippets.length > 0 && (
               <a
                 href={`#related-groups-${item.hash}`}
-                onClick={e => {
-                  e.preventDefault();
-                  setViewMode('bySnippet');
-                  setShowRelatedSnippets(!showRelatedSnippets);
-                  document.getElementById(`related-groups-${item.hash}`)?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => handleConnectionClick(item.hash)}
                 className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
               >
                 <GitBranch className="w-4 h-4" />
