@@ -7,10 +7,9 @@ import { Globe } from 'lucide-react';
 interface StructuredDataSnippetCardProps {
   snippet: StructuredDataSnippet;
   allSnippets: StructuredDataSnippet[];
-  currentFormatFilter?: string;
 }
 
-export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatFilter = 'all' }: StructuredDataSnippetCardProps) {
+export function StructuredDataSnippetCard({ snippet, allSnippets }: StructuredDataSnippetCardProps) {
   const [showAllUrls, setShowAllUrls] = useState(false);
 
   const uniqueUrls = [...new Set(snippet.items.map(item => item.url))];
@@ -129,7 +128,8 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
             <div className="border border-slate-200 rounded-lg overflow-hidden">
               <StructuredDataCard 
                 item={snippet.items[0]} 
-                allData={[]} 
+                allData={[]}
+                allSnippets={allSnippets}
                 compact 
               />
             </div>

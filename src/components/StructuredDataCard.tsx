@@ -2,31 +2,51 @@ import React, { useState } from 'react';
 import { StructuredDataItem, StructuredDataSnippet } from '../types/crawler';
 import { groupStructuredData, findRelatedSnippets } from '../services/dataGrouper';
 import { getSnippetIcon } from '../utils/iconUtils';
+import { useViewMode } from '../contexts/ViewModeContext';
 import { ExternalLink, ChevronDown, ChevronRight, Copy, Check, Link, GitBranch } from 'lucide-react';
 
 interface StructuredDataCardProps {
   item: StructuredDataItem;
   allData?: StructuredDataItem[];
+  allSnippets?: StructuredDataSnippet[];
   compact?: boolean;
   showUrl?: boolean;
-  currentFormatFilter?: string;
 }
 
-export function StructuredDataCard({ item, allData = [], compact = false, showUrl = false, currentFormatFilter = 'all' }: StructuredDataCardProps) {
+export function StructuredDataCard({ item, allData = [], allSnippets = [], compact = false, showUrl = false }: StructuredDataCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showConnections, setShowConnections] = useState(false);
   const [showRelatedSnippets, setShowRelatedSnippets] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { setViewMode } = useViewMode();
 
   // Generate snippet data to find connections and related snippets
-  const snippetData = allData.length > 0 ? groupStructuredData(allData) : [];
+  const snippetData = allSnippets.length > 0 ? allSnippets : (allData.length > 0 ? groupStructuredData(allData) : []);
   const currentSnippet = snippetData.find(snippet => snippet.hash === item.hash);
   const connections = currentSnippet?.connections || [];
   
-  const allRelatedSnippets = currentSnippet ? findRelatedSnippets(currentSnippet, snippetData) : [];
-  const relatedSnippets = currentFormatFilter === 'all' 
-    ? allRelatedSnippets 
-    : allRelatedSnippets.filter(relatedSnippet => relatedSnippet.format === currentFormatFilter);
+  const relatedSnippets = currentSnippet ? findRelatedSnippets(currentSnippet, snippetData) : [];
+
+  const handleConnectionClick = (targetHash: string) => {
+    // Switch to snippet view
+    setViewMode('bySnippet');
+    
+    // Scroll to the target snippet after a short delay to allow view change
+    setTimeout(() => {
+      const targetElement = document.getElementById(`snippet-${targetHash}`);
+      if (targetElement) {
+        targetElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        // Add a highlight effect
+        targetElement.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        setTimeout(() => {
+          targetElement.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        }, 3000);
+      }
+    }, 100);
+  };
 
   // Helper function to extract descriptive name from structured data  
   const getDescriptiveName = (snippet: StructuredDataSnippet): string => {
@@ -225,9 +245,9 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
           {showConnections && (
             <div className="mt-3 space-y-2">
               {connections.map((connection, index) => (
-                <a
-                  href={`#snippet-${connection.targetHash}`}
+                <button
                   key={index}
+                  onClick={() => connection.targetHash && handleConnectionClick(connection.targetHash)}
                   className={`flex items-center justify-between p-3 rounded-lg border ${connectionTypeColor(connection.type)} hover:bg-blue-50 hover:text-slate-900 hover:border-blue-300 transition-colors`}
                 >
                   <div className="flex-1 min-w-0">
@@ -248,7 +268,7 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
                       Target: <code className="font-mono">{connection.targetHash}</code>
                     </div>
                   )}
-                </a>
+                </button>
               ))}
             </div>
           )}
@@ -275,9 +295,9 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
               {relatedSnippets.map((relatedSnippet) => {
                 const descriptiveName = getDescriptiveName(relatedSnippet);
                 return (
-                  <a
-                    href={`#snippet-${relatedSnippet.hash}`}
+                  <button
                     key={relatedSnippet.hash}
+                    onClick={() => handleConnectionClick(relatedSnippet.hash)}
                     className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -304,7 +324,7 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
                         {relatedSnippet.duplicateCount} duplicates
                       </p>
                     )}
-                  </a>
+                  </button>
                 );
               })}
             </div>
