@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
 import { StructuredDataItem } from '../types/crawler';
+import { groupStructuredData, findRelatedSnippets } from '../services/dataGrouper';
 import { getSnippetIcon } from '../utils/iconUtils';
-import { ExternalLink, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronRight, Copy, Check, Link, GitBranch } from 'lucide-react';
 
 interface StructuredDataCardProps {
   item: StructuredDataItem;
+  allData?: StructuredDataItem[];
   compact?: boolean;
   showUrl?: boolean;
+  currentFormatFilter?: string;
 }
 
-export function StructuredDataCard({ item, compact = false, showUrl = false }: StructuredDataCardProps) {
+export function StructuredDataCard({ item, allData = [], compact = false, showUrl = false, currentFormatFilter = 'all'  }: StructuredDataCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showConnections, setShowConnections] = useState(false);
+  const [showRelatedSnippets, setShowRelatedSnippets] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Generate snippet data to find connections and related snippets
+  const snippetData = allData.length > 0 ? groupStructuredData(allData) : [];
+  const currentSnippet = snippetData.find(snippet => snippet.hash === item.hash);
+  const connections = currentSnippet?.connections || [];
+  
+  const allRelatedSnippets = currentSnippet ? findRelatedSnippets(currentSnippet, snippetData) : [];
+  const relatedSnippets = currentFormatFilter === 'all' 
+    ? allRelatedSnippets 
+    : allRelatedSnippets.filter(relatedSnippet => relatedSnippet.format === currentFormatFilter);
 
   const formatBadgeColor = (format: string) => {
     const colors = {
@@ -76,6 +91,38 @@ export function StructuredDataCard({ item, compact = false, showUrl = false }: S
           <div className="mb-3">
             <span className="text-xs font-medium text-slate-600">ID: </span>
             <code className="text-xs font-mono bg-slate-100 px-1 rounded">{item.id}</code>
+          </div>
+        )}
+
+        {/* Connections Summary */}
+        {connections.length > 0 && (
+          <div className="flex items-center space-x-4 text-sm mb-3">
+            <a
+              href={`#connections-${item.hash}`}
+              onClick={e => {
+                e.preventDefault();
+                setShowConnections(!showConnections);
+                document.getElementById(`connections-${item.hash}`)?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
+            >
+              <Link className="w-4 h-4" />
+              <span>{connections.length} connection{connections.length !== 1 ? 's' : ''}</span>
+            </a>
+            {relatedSnippets.length > 0 && (
+              <a
+                href={`#related-groups-${item.hash}`}
+                onClick={e => {
+                  e.preventDefault();
+                  setShowRelatedSnippets(!showRelatedSnippets);
+                  document.getElementById(`related-groups-${item.hash}`)?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
+              >
+                <GitBranch className="w-4 h-4" />
+                <span>{relatedSnippets.length} related group{relatedSnippets.length !== 1 ? 's' : ''}</span>
+              </a>
+            )}
           </div>
         )}
 

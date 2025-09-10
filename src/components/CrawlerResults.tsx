@@ -474,8 +474,10 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
                         <StructuredDataCard 
                           key={`${item.url}-${index}`} 
                           item={item} 
+                          allData={data}
                           compact 
                           showUrl={false}
+                          currentFormatFilter={selectedFormat}
                         />
                       ))}
                     </div>
@@ -497,7 +499,14 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
         filteredData.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredData.map((item, index) => (
-            <StructuredDataCard key={`${item.url}-${index}`} item={item} compact showUrl />
+            <StructuredDataCard 
+              key={`${item.url}-${index}`} 
+              item={item} 
+              allData={data}
+              compact 
+              showUrl={true}
+              currentFormatFilter={selectedFormat}
+            />
           ))}
         </div>
         ) : (

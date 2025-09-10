@@ -120,24 +120,6 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
                   </p>
                 )}
               </div>
-              {/*<div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${formatBadgeColor(group.format)}`}>
-                    {group.format}
-                  </span>
-                  {group.type && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                      {group.type}
-                    </span>
-                  )}
-                  {group.duplicateCount > 1 && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                      <Users className="w-3 h-3 mr-1" />
-                      {group.duplicateCount} duplicates
-                    </span>
-                  )}
-                </div>
-              </div>*/}
             </div>
             {/* URLs */}
             <div className="space-y-1">
@@ -184,7 +166,11 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
         <div className="space-y-4">
           {snippet.items.length > 0 && (
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <StructuredDataCard item={snippet.items[0]} compact />
+              <StructuredDataCard 
+                item={snippet.items[0]} 
+                allData={[]} 
+                compact 
+              />
             </div>
           )}
         </div>
