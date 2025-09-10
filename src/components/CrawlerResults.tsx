@@ -3,6 +3,7 @@ import { StructuredDataItem, StructuredDataSnippet } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
 import { StructuredDataSnippetCard } from './StructuredDataSnippetCard';
 import { getSnippetIcon } from '../utils/iconUtils';
+import { ViewModeProvider } from '../contexts/ViewModeContext';
 import { Filter, Search, Download, Eye, Group, List, TreePine, ChevronDown, ChevronRight, Globe, Menu } from 'lucide-react';
 
 interface CrawlerResultsProps {
@@ -154,6 +155,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
   const ViewModeIcon = getViewModeIcon();
 
   return (
+    <ViewModeProvider viewMode={viewMode} setViewMode={setViewMode}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -520,5 +522,6 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
         )
       )}
     </div>
+    </ViewModeProvider>
   );
 }

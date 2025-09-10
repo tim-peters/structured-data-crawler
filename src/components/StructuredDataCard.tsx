@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StructuredDataItem } from '../types/crawler';
 import { groupStructuredData, findRelatedSnippets } from '../services/dataGrouper';
 import { getSnippetIcon } from '../utils/iconUtils';
+import { useViewMode } from '../contexts/ViewModeContext';
 import { ExternalLink, ChevronDown, ChevronRight, Copy, Check, Link, GitBranch } from 'lucide-react';
 
 interface StructuredDataCardProps {
@@ -17,6 +18,7 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
   const [showConnections, setShowConnections] = useState(false);
   const [showRelatedSnippets, setShowRelatedSnippets] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { setViewMode } = useViewMode();
 
   // Generate snippet data to find connections and related snippets
   const snippetData = allData.length > 0 ? groupStructuredData(allData) : [];
@@ -101,6 +103,7 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
               href={`#connections-${item.hash}`}
               onClick={e => {
                 e.preventDefault();
+                setViewMode('bySnippet');
                 setShowConnections(!showConnections);
                 document.getElementById(`connections-${item.hash}`)?.scrollIntoView({ behavior: 'smooth' });
               }}
@@ -114,6 +117,7 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
                 href={`#related-groups-${item.hash}`}
                 onClick={e => {
                   e.preventDefault();
+                  setViewMode('bySnippet');
                   setShowRelatedSnippets(!showRelatedSnippets);
                   document.getElementById(`related-groups-${item.hash}`)?.scrollIntoView({ behavior: 'smooth' });
                 }}
