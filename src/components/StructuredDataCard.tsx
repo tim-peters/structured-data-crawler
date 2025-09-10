@@ -90,9 +90,9 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
   };
 
   return (
-    <div className={`bg-white ${compact ? 'rounded-lg' : 'rounded-xl shadow-sm'} border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200`}>
+    <div className={`dataCard bg-white ${compact ? 'rounded-lg' : 'rounded-xl shadow-sm'} border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200`}>
       {/* Header */}
-      <div className={`${compact ? 'p-4' : 'p-6'} border-b border-slate-100`}>
+      <div className={`${compact ? 'p-4' : 'p-6'} pb-2`}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             {showUrl && (
@@ -125,36 +125,6 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
           <div className="mb-3">
             <span className="text-xs font-medium text-slate-600">ID: </span>
             <code className="text-xs font-mono bg-slate-100 px-1 rounded">{item.id}</code>
-          </div>
-        )}
-
-        {/* Connections Summary */}
-        {connections.length > 0 && (
-          <div className="flex items-center space-x-4 text-sm mb-3">
-            <a
-              href={`#connections-${item.hash}`}
-              onClick={(e) => {
-                e.preventDefault();
-                handleSnippetNavigation(item.hash, 'connections');
-              }}
-              className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
-            >
-              <Link className="w-4 h-4" />
-              <span>{connections.length} connection{connections.length !== 1 ? 's' : ''}</span>
-            </a>
-            {relatedSnippets.length > 0 && (
-              <a
-                href={`#related-groups-${item.hash}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleSnippetNavigation(item.hash, 'related');
-                }}
-                className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
-              >
-                <GitBranch className="w-4 h-4" />
-                <span>{relatedSnippets.length} related snippet{relatedSnippets.length !== 1 ? 's' : ''}</span>
-              </a>
-            )}
           </div>
         )}
 
@@ -211,6 +181,36 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
           </div>
         )}
       </div>
+
+      {/* Connections Summary */}
+      {connections.length > 0 && (
+        <div className="flex items-center space-x-4 text-sm p-4 bg-slate-50">
+          <a
+            href={`#connections-${item.hash}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleSnippetNavigation(item.hash, 'connections');
+            }}
+            className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
+          >
+            <Link className="w-4 h-4" />
+            <span>{connections.length} connection{connections.length !== 1 ? 's' : ''}</span>
+          </a>
+          {relatedSnippets.length > 0 && (
+            <a
+              href={`#related-groups-${item.hash}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleSnippetNavigation(item.hash, 'related');
+              }}
+              className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
+            >
+              <GitBranch className="w-4 h-4" />
+              <span>{relatedSnippets.length} related snippet{relatedSnippets.length !== 1 ? 's' : ''}</span>
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }

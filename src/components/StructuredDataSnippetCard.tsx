@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StructuredDataSnippet, StructuredDataItem } from '../types/crawler';
+import { StructuredDataSnippet } from '../types/crawler';
 import { StructuredDataCard } from './StructuredDataCard';
 import { findRelatedSnippets } from '../services/dataGrouper';
 import { getSnippetIcon } from '../utils/iconUtils';
@@ -18,7 +18,6 @@ interface StructuredDataSnippetCardProps {
 }
 
 export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatFilter = 'all' }: StructuredDataSnippetCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showConnections, setShowConnections] = useState(false);
   const [showAllUrls, setShowAllUrls] = useState(false);
   const [showRelatedSnippets, setShowRelatedSnippets] = useState(false);
@@ -98,6 +97,30 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
     };
     return colors[type as keyof typeof colors] || 'bg-slate-50 text-slate-700 border-slate-200';
   };
+
+const handleAnchorLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, targetHash: string) => {
+  e.preventDefault(); // Verhindere das Standard-Scrollverhalten
+  
+  // Finde das Ziel-Element
+  const targetSnippet = document.getElementById(`snippet-${targetHash}`)
+  if (!targetSnippet) return;
+  const targetElement = targetSnippet.querySelector('.dataCard');
+  if (!targetElement) return;
+  
+  // Scroll zum Ziel-Element mit Animation
+  targetElement.scrollIntoView({ 
+    behavior: 'smooth', 
+    block: 'center' 
+  });
+  
+  // Füge Highlight-Effekt hinzu
+  targetElement.classList.add('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-lg');
+  
+  // Entferne Highlight-Effekt nach 3 Sekunden
+  setTimeout(() => {
+    targetElement.classList.remove('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-lg');
+  }, 3000);
+};
 
   return (
     <div 
@@ -198,9 +221,8 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
             <div className="mt-3 space-y-2">
               {snippet.connections.map((connection, index) => (
                 <a
-                  href={`#snippet-${connection.targetHash}`}
-                  key={index}
-                  className={`flex items-center justify-between p-3 rounded-lg border ${connectionTypeColor(connection.type)} hover:bg-blue-50 hover:text-slate-900 hover:border-blue-300 transition-colors`}
+                  onClick={(e) => handleAnchorLinkClick(e, connection.targetHash)}
+                  className={`flex items-center justify-between p-3 cursor-pointer rounded-lg border ${connectionTypeColor(connection.type)} hover:bg-blue-50 hover:text-slate-900 hover:border-blue-300 transition-colors`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
@@ -250,8 +272,7 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
                 const descriptiveName = getDescriptiveName(relatedSnippet);
                 return (
                   <a
-                    href={`#snippet-${relatedSnippet.hash}`}
-                    key={relatedSnippet.hash}
+                    onClick={(e) => handleAnchorLinkClick(e, relatedSnippet.hash)}
                     className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center justify-between mb-2">
