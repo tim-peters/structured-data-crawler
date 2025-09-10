@@ -136,7 +136,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
     switch (viewMode) {
       case 'byUrl': return 'By URL';
       case 'byType': return 'By Type';
-      case 'bySnippet': return 'All Snippet';
+      case 'bySnippet': return 'All Snippets';
       case 'byOccurrence': return 'All Occurrences';
       default: return 'Select View';
     }
@@ -207,7 +207,7 @@ export function CrawlerResults({ data, snippetData }: CrawlerResultsProps) {
               }`}
             >
               <Group className="w-4 h-4" />
-              <span>All Snippet</span>
+              <span>All Snippets</span>
             </button>
             {/* By Occurrence */}
             <button

@@ -32,7 +32,6 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
     // Scroll to the target snippet after a short delay to allow view change
     setTimeout(() => {
       const targetElement = document.getElementById(`snippet-${targetHash}`);
-      console.dir(targetElement);
       if (targetElement) {
         targetElement.scrollIntoView({ 
           behavior: 'smooth', 
@@ -42,6 +41,64 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
         targetElement.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
         setTimeout(() => {
           targetElement.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        }, 3000);
+      }
+    }, 100);
+  };
+
+  const handleConnectionsClick = (targetHash: string) => {
+    // Switch to snippet view
+    setViewMode('bySnippet');
+    
+    // Scroll to the target snippet and expand connections
+    setTimeout(() => {
+      const targetElement = document.getElementById(`snippet-${targetHash}`);
+      const connectionsToggle = targetElement.querySelector('[data-connections-toggle]') as HTMLButtonElement;
+      if (connectionsToggle) {
+        connectionsToggle.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Find and click the connections toggle button to expand it
+        if (connectionsToggle && connectionsToggle.getAttribute('aria-expanded') === 'false') {
+          setTimeout(() => connectionsToggle.click(), 500);
+        }
+        
+        // Add a highlight effect
+        const targetSection = targetElement.querySelector('[id^=connections]');
+        targetSection.classList.add('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50');
+        setTimeout(() => {
+          targetSection.classList.remove('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50');
+        }, 3000);
+      }
+    }, 100);
+  };
+
+  const handleRelatedGroupsClick = (targetHash: string) => {
+    // Switch to snippet view
+    setViewMode('bySnippet');
+    
+    // Scroll to the target snippet and expand related snippets
+    setTimeout(() => {
+      const targetElement = document.getElementById(`snippet-${targetHash}`);
+      const relatedToggle = targetElement.querySelector('[data-related-toggle]') as HTMLButtonElement;
+      if (relatedToggle) {
+        relatedToggle.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Find and click the related snippets toggle button to expand it
+        if (relatedToggle && relatedToggle.getAttribute('aria-expanded') === 'false') {
+          setTimeout(() => relatedToggle.click(), 500);
+        }
+        
+        // Add a highlight effect
+        const targetSection = targetElement.querySelector('[id^=related-snippets]');
+        targetSection.classList.add('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-b-lg');
+        setTimeout(() => {
+          targetSection.classList.remove('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-b-lg');
         }, 3000);
       }
     }, 100);
@@ -118,7 +175,10 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
           <div className="flex items-center space-x-4 text-sm mb-3">
             <a
               href={`#connections-${item.hash}`}
-              onClick={() => handleConnectionClick(item.hash)}
+              onClick={(e) => {
+                e.preventDefault();
+                handleConnectionsClick(item.hash);
+              }}
               className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
             >
               <Link className="w-4 h-4" />
@@ -127,11 +187,14 @@ export function StructuredDataCard({ item, allData = [], compact = false, showUr
             {relatedSnippets.length > 0 && (
               <a
                 href={`#related-groups-${item.hash}`}
-                onClick={() => handleConnectionClick(item.hash)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleRelatedGroupsClick(item.hash);
+                }}
                 className="flex items-center space-x-2 text-slate-600 hover:text-blue-700 cursor-pointer"
               >
                 <GitBranch className="w-4 h-4" />
-                <span>{relatedSnippets.length} related group{relatedSnippets.length !== 1 ? 's' : ''}</span>
+                <span>{relatedSnippets.length} related snippet{relatedSnippets.length !== 1 ? 's' : ''}</span>
               </a>
             )}
           </div>

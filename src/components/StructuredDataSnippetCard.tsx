@@ -180,6 +180,8 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
       {snippet.connections.length > 0 && (
         <div id={`connections-${snippet.hash}`} className="px-6 py-4 bg-slate-50 border-b border-slate-100">
           <button
+            data-connections-toggle
+            aria-expanded={showConnections}
             onClick={() => setShowConnections(!showConnections)}
             className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
           >
@@ -227,8 +229,10 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
 
       {/* Related Snippets */}
       {relatedSnippets.length > 0 && (
-        <div id={`related-snippets-${snippet.hash}`} className="px-6 py-4 bg-blue-50 border-t border-slate-100">
+        <div id={`related-snippets-${snippet.hash}`} className=" px-6 py-4 bg-blue-50 border-t border-slate-100">
           <button
+            data-related-toggle
+            aria-expanded={showRelatedSnippets}
             onClick={() => setShowRelatedSnippets(!showRelatedSnippets)}
             className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors mb-3"
           >
