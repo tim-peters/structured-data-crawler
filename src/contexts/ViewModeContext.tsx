@@ -1,6 +1,5 @@
 import React, { createContext, useContext } from 'react';
-
-export type ViewMode = 'byUrl' | 'byType' | 'bySnippet' | 'byOccurrence';
+import { ViewMode } from '../hooks/useViewData';
 
 interface ViewModeContextType {
   viewMode: ViewMode;
