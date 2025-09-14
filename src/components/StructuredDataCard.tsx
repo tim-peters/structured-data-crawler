@@ -129,19 +129,6 @@ export function StructuredDataCard({
       'RDFa': 'bg-purple-100 text-purple-800',
       'OpenGraph': 'bg-orange-100 text-orange-800',
       'Twitter Cards': 'bg-cyan-100 text-cyan-800',
-      'Schema.org': 'bg-indigo-100 text-indigo-800',
-      'Mixed': 'bg-slate-100 text-slate-800'
-    };
-    return colors[format as keyof typeof colors] || 'bg-slate-100 text-slate-800';
-  };
-
-  const formatBadgeColor = (format: string) => {
-    const colors = {
-      'JSON-LD': 'bg-blue-100 text-blue-800',
-      'Microdata': 'bg-green-100 text-green-800',
-      'RDFa': 'bg-purple-100 text-purple-800',
-      'OpenGraph': 'bg-orange-100 text-orange-800',
-      'Twitter Cards': 'bg-cyan-100 text-cyan-800',
       'Schema.org': 'bg-indigo-100 text-indigo-800'
     };
     return colors[format as keyof typeof colors] || 'bg-slate-100 text-slate-800';
