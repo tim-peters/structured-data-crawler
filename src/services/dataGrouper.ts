@@ -161,3 +161,51 @@ export function findRelatedSnippets(
   
   return relatedSnippets;
 }
+
+export function findIncomingReferences(
+  targetSnippet: StructuredDataSnippet,
+  allSnippets: StructuredDataSnippet[]
+): StructuredDataSnippet[] {
+  const incomingSnippets: StructuredDataSnippet[] = [];
+  
+  // Get all possible IDs that could reference this snippet
+  const targetIds = new Set<string>();
+  
+  // Add the snippet's main ID if it exists
+  if (targetSnippet.items[0]?.id) {
+    targetIds.add(targetSnippet.items[0].id);
+  }
+  
+  // Add any @id values from the data
+  targetSnippet.items.forEach(item => {
+    if (item.data['@id']) {
+      targetIds.add(item.data['@id']);
+    }
+    // Also check for other ID-like properties
+    if (item.data.url) {
+      targetIds.add(item.data.url);
+    }
+    if (item.data.sameAs) {
+      if (Array.isArray(item.data.sameAs)) {
+        item.data.sameAs.forEach(id => targetIds.add(id));
+      } else {
+        targetIds.add(item.data.sameAs);
+      }
+    }
+  });
+  
+  // Find snippets that reference any of these IDs
+  allSnippets.forEach(snippet => {
+    if (snippet.hash === targetSnippet.hash) return; // Skip self
+    
+    const hasIncomingReference = snippet.connections.some(connection => 
+      targetIds.has(connection.targetId) || connection.targetHash === targetSnippet.hash
+    );
+    
+    if (hasIncomingReference && !incomingSnippets.includes(snippet)) {
+      incomingSnippets.push(snippet);
+    }
+  });
+  
+  return incomingSnippets;
+}
