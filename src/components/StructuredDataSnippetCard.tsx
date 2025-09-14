@@ -191,7 +191,8 @@ const handleAnchorLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, targetHas
             <div className="border border-slate-200 rounded-lg overflow-hidden">
               <StructuredDataCard 
                 item={snippet.items[0]} 
-                allData={[]} 
+                allData={[]}
+                allSnippets={allSnippets}
                 compact 
               />
             </div>
