@@ -91,22 +91,24 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
   };
 
   const handleConnectionClick = (targetHash: string) => {
-    // Find the target snippet element
-    const targetElement = document.getElementById(`snippet-${targetHash}`);
+    // Finde das Ziel-Element
+    const targetSnippet = document.getElementById(`snippet-${targetHash}`)
+    if (!targetSnippet) return;
+    const targetElement = targetSnippet.querySelector('.dataCard');
     if (!targetElement) return;
-  
-    // Scroll to the target element
+
+    // Scroll zum Ziel-Element mit Animation
     targetElement.scrollIntoView({ 
       behavior: 'smooth', 
       block: 'center' 
     });
-    
-    // Add highlight effect
-    targetElement.classList.add('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-xl');
-    
-    // Remove highlight effect after 3 seconds
+
+    // Füge Highlight-Effekt hinzu
+    targetElement.classList.add('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-lg');
+
+    // Entferne Highlight-Effekt nach 3 Sekunden
     setTimeout(() => {
-      targetElement.classList.remove('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-xl');
+      targetElement.classList.remove('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-lg');
     }, 3000);
   };
 

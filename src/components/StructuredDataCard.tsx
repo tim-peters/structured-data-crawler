@@ -39,43 +39,69 @@ export function StructuredDataCard({
   // Find snippets that reference this item (incoming)
   const incomingSnippets = currentSnippet ? findIncomingReferences(currentSnippet, snippetData) : [];
 
-  const handleSnippetNavigation = (targetHash: string, type: 'connections' | 'related') => {
-  // Switch to snippet view
-  setViewMode('bySnippet');
-  
-  // Scroll to the target snippet and expand the appropriate section
-  setTimeout(() => {
-    const targetElement = document.getElementById(`snippet-${targetHash}`);
-    const toggleSelector = type === 'connections' ? '[data-connections-toggle]' : '[data-related-toggle]';
-    const sectionSelector = type === 'connections' ? '[id^=connections]' : '[id^=related-snippets]';
-    
-    const toggleButton = targetElement.querySelector(toggleSelector) as HTMLButtonElement;
-    if (toggleButton) {
-      toggleButton.scrollIntoView({ 
+  const handleConnectionClick = (targetHash: string) => {
+    setViewMode('bySnippet');
+
+    setTimeout(() => {
+      // Finde das Ziel-Element
+      const targetSnippet = document.getElementById(`snippet-${targetHash}`);
+      if (!targetSnippet) return;
+      const targetElement = targetSnippet.querySelector('.dataCard');
+      if (!targetElement) return;
+
+      // Scroll zum Ziel-Element mit Animation
+      targetElement.scrollIntoView({ 
         behavior: 'smooth', 
         block: 'center' 
       });
-      
-      // Find and click the toggle button to expand it
-      if (toggleButton.getAttribute('aria-expanded') === 'false') {
-        setTimeout(() => toggleButton.click(), 500);
-      }
-      
-      // Add a highlight effect
-      const targetSection = targetElement.querySelector(sectionSelector);
-      const classesToAdd = ['outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50'];
-      
-      if (type === 'related') {
-        classesToAdd.push('rounded-b-lg');
-      }
-      
-      targetSection.classList.add(...classesToAdd);
+
+      // Füge Highlight-Effekt hinzu
+      targetElement.classList.add('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-lg');
+
+      // Entferne Highlight-Effekt nach 3 Sekunden
       setTimeout(() => {
-        targetSection.classList.remove(...classesToAdd);
+        targetElement.classList.remove('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-lg');
       }, 3000);
-    }
-  }, 100);
-};
+    }, 100);
+  };
+
+    const handleSnippetNavigation = (targetHash: string, type: 'connections' | 'related') => {
+    // Switch to snippet view
+    setViewMode('bySnippet');
+    
+    // Scroll to the target snippet and expand the appropriate section
+    setTimeout(() => {
+      const targetElement = document.getElementById(`snippet-${targetHash}`);
+      const toggleSelector = type === 'connections' ? '[data-connections-toggle]' : '[data-related-toggle]';
+      const sectionSelector = type === 'connections' ? '[id^=connections]' : '[id^=related-snippets]';
+      
+      const toggleButton = targetElement.querySelector(toggleSelector) as HTMLButtonElement;
+      if (toggleButton) {
+        toggleButton.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Find and click the toggle button to expand it
+        if (toggleButton.getAttribute('aria-expanded') === 'false') {
+          setTimeout(() => toggleButton.click(), 500);
+        }
+        
+        // Add a highlight effect
+        const targetSection = targetElement.querySelector(sectionSelector);
+        const classesToAdd = ['outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50'];
+        
+        if (type === 'related') {
+          classesToAdd.push('rounded-b-lg');
+        }
+        
+        targetSection.classList.add(...classesToAdd);
+        setTimeout(() => {
+          targetSection.classList.remove(...classesToAdd);
+        }, 3000);
+      }
+    }, 100);
+  };
 
   // Helper function to extract descriptive name from structured data  
   const getDescriptiveName = (snippet: any): string => {
