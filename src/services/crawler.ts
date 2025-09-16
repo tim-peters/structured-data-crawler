@@ -85,6 +85,9 @@ interface CrawlState {
 // Cache for domains that require CORS proxy
 const corsProxyCache = new Map<string, boolean>();
 
+// Cache for domains that work with direct fetch
+const directFetchCache = new Map<string, boolean>();
+
 // Local PHP proxy configuration
 const LOCAL_PHP_PROXY =
   import.meta.env.MODE === 'production'
@@ -101,8 +104,8 @@ async function fetchWithCorsHandling(url: string, timeout: number = 10000): Prom
   const urlObj = new URL(url);
   const domain = urlObj.hostname;
   
-  // Check if we know this domain requires CORS proxy
-  if (corsProxyCache.get(domain)) {
+  // Check if we know this domain requires CORS proxy (but not if we know direct fetch works)
+  if (corsProxyCache.get(domain) && !directFetchCache.get(domain)) {
     return await fetchThroughProxies(url);
   }
   
@@ -111,6 +114,7 @@ async function fetchWithCorsHandling(url: string, timeout: number = 10000): Prom
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
+    // Follow redirects automatically
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
@@ -119,7 +123,8 @@ async function fetchWithCorsHandling(url: string, timeout: number = 10000): Prom
         'Accept-Language': 'en-US,en;q=0.5',
         'Cache-Control': 'no-cache'
       },
-      mode: 'cors'
+      mode: 'cors',
+      redirect: 'follow'
     });
     
     clearTimeout(timeoutId);
@@ -133,16 +138,40 @@ async function fetchWithCorsHandling(url: string, timeout: number = 10000): Prom
       throw new Error('Response is not HTML');
     }
 
+    // Mark this domain as working with direct fetch
+    directFetchCache.set(domain, true);
     return await response.text();
   } catch (err: any) {
-    // If it's a CORS error, cache this domain and use proxy
-    if (err.name === 'TypeError' || err.message.includes('CORS') || err.message.includes('fetch')) {
+    // Only use proxy for actual CORS/network errors, not for HTTP errors like 404
+    if ((err.name === 'TypeError' || err.message.includes('CORS') || err.message.includes('fetch')) 
+        && !err.message.includes('HTTP')) {
       console.log(`CORS issue detected for ${domain}, switching to proxy`);
+      directFetchCache.delete(domain); // Remove from direct fetch cache
       corsProxyCache.set(domain, true);
       return await fetchThroughProxies(url);
     }
     throw err;
   }
+}
+
+function normalizeDomainInput(input: string): { baseUrl: string; baseDomain: string; startPath?: string } {
+  let cleanInput = input.trim().toLowerCase();
+  
+  // Remove protocol if present
+  cleanInput = cleanInput.replace(/^https?:\/\//, '');
+  
+  // Extract path if present
+  const pathMatch = cleanInput.match(/^([^\/]+)(\/.*)?$/);
+  const domainPart = pathMatch ? pathMatch[1] : cleanInput;
+  const pathPart = pathMatch ? pathMatch[2] : undefined;
+  
+  // Remove www. prefix for base domain
+  const baseDomain = domainPart.replace(/^www\./, '');
+  
+  // Always use HTTPS for the base URL
+  const baseUrl = `https://${baseDomain}`;
+  
+  return { baseUrl, baseDomain, startPath: pathPart };
 }
 
 async function fetchThroughLocalProxy(url: string): Promise<string> {
@@ -210,14 +239,17 @@ export async function crawlDomain(
 ): Promise<void> {
   const { onProgress, onData, signal } = callbacks;
 
-  // Always use HTTPS for the main crawl target
-  const baseDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '');
-  const baseUrl = normalizeUrl(`https://${baseDomain}`, baseDomain);
-  const urlObj = new URL(baseUrl);
+  // Normalize the input domain
+  const { baseUrl, baseDomain, startPath } = normalizeDomainInput(domain);
+  
+  // Determine starting URL - use specific path if provided, otherwise use root
+  const startingUrl = startPath ? normalizeUrl(`${baseUrl}${startPath}`, baseDomain) : baseUrl;
+  
+  const urlObj = new URL(startingUrl);
 
   const state: CrawlState = {
     visited: new Set(),
-    queue: [{ url: baseUrl, depth: 0 }],
+    queue: [{ url: startingUrl, depth: 0 }],
     pagesCrawled: 0,
     structuredDataFound: 0,
     robotsRules: new Map()
@@ -226,7 +258,7 @@ export async function crawlDomain(
   // Load robots.txt if respecting robots
   if (options.respectRobots) {
     try {
-      const robotsUrl = `${urlObj.protocol}//${urlObj.host}/robots.txt`;
+      const robotsUrl = `https://${baseDomain}/robots.txt`;
       try {
         const robotsText = await fetchWithCorsHandling(robotsUrl, 5000);
         state.robotsRules = parseRobotsTxt(robotsText);
@@ -264,9 +296,21 @@ export async function crawlDomain(
 
       const html = await fetchWithCorsHandling(url);
       
-      // Check for canonical URL and use it if different
+      // Check for canonical URL and use it if different (but keep same domain)
       const canonicalUrl = extractCanonicalUrl(html, url);
-      const finalUrl = canonicalUrl !== url ? canonicalUrl : url;
+      let finalUrl = url;
+      
+      // Only use canonical URL if it's from the same domain
+      if (canonicalUrl !== url) {
+        try {
+          const canonicalDomain = new URL(canonicalUrl).hostname.replace(/^www\./, '');
+          if (canonicalDomain === baseDomain) {
+            finalUrl = canonicalUrl;
+          }
+        } catch (err) {
+          // If canonical URL is invalid, stick with original
+        }
+      }
       
       // Skip if we've already processed the canonical version
       if (state.visited.has(finalUrl)) {
@@ -288,7 +332,6 @@ export async function crawlDomain(
       if (depth < options.maxDepth) {
         const links = extractLinks(html, finalUrl, baseDomain);
         for (const link of links) {
-          // Force HTTPS for links matching the base domain
           const normalizedLink = normalizeUrl(link, baseDomain);
           if (!state.visited.has(normalizedLink) && state.queue.length < 1000) {
             state.queue.push({ url: normalizedLink, depth: depth + 1 });
@@ -306,17 +349,17 @@ export async function crawlDomain(
 }
 
 function extractLinks(html: string, baseUrl: string, baseDomain: string): string[] {
-  // Improved regex: matches href and src, with or without quotes
-  const linkRegex = /(?:href|src)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>"']+))/gi;
+  // Focus on href attributes for navigation links
+  const linkRegex = /href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>"']+))/gi;
   const links: string[] = [];
   let match: RegExpExecArray | null;
 
   // File extensions that typically don't contain links
   const nonLinkExtensions = [
-    '.css', '.js', '.csv', 
+    '.css', '.js', '.csv', '.xml', '.json',
     '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
     '.zip', '.rar', '.7z', '.tar', '.gz',
-    '.jpg', '.jpeg', '.png', 'svg', '.gif', '.bmp', '.svg', '.webp', '.ico',
+    '.jpg', '.jpeg', '.png', '.svg', '.gif', '.bmp', '.webp', '.ico',
     '.mp3', '.mp4', '.wav', '.avi', '.mov', '.wmv',
     '.ttf', '.woff', '.woff2', '.eot', '.otf'
   ];
@@ -345,7 +388,7 @@ function extractLinks(html: string, baseUrl: string, baseDomain: string): string
     // Only include links from the same domain
     try {
       const linkDomain = new URL(absoluteUrl).hostname.replace(/^www\./, '');
-      if (linkDomain === baseDomain) {
+      if (linkDomain === baseDomain || linkDomain === `www.${baseDomain}`) {
         links.push(absoluteUrl);
       }
     } catch {
