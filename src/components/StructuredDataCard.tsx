@@ -8,7 +8,6 @@ import { ExternalLink, ChevronDown, ChevronRight, Copy, Check, ArrowRight, Arrow
 interface StructuredDataCardProps {
   item: StructuredDataItem;
   allData?: StructuredDataItem[];
-  allSnippets?: StructuredDataSnippet[];
   compact?: boolean;
   showUrl?: boolean;
 }
@@ -16,7 +15,6 @@ interface StructuredDataCardProps {
 export function StructuredDataCard({ 
   item, 
   allData = [], 
-  allSnippets = [], 
   compact = false, 
   showUrl = false 
 }: StructuredDataCardProps) {
@@ -62,44 +60,6 @@ export function StructuredDataCard({
       setTimeout(() => {
         targetElement.classList.remove('outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50', 'rounded-lg');
       }, 3000);
-    }, 100);
-  };
-
-    const handleSnippetNavigation = (targetHash: string, type: 'connections' | 'related') => {
-    // Switch to snippet view
-    setViewMode('bySnippet');
-    
-    // Scroll to the target snippet and expand the appropriate section
-    setTimeout(() => {
-      const targetElement = document.getElementById(`snippet-${targetHash}`);
-      const toggleSelector = type === 'connections' ? '[data-connections-toggle]' : '[data-related-toggle]';
-      const sectionSelector = type === 'connections' ? '[id^=connections]' : '[id^=related-snippets]';
-      
-      const toggleButton = targetElement.querySelector(toggleSelector) as HTMLButtonElement;
-      if (toggleButton) {
-        toggleButton.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
-        });
-        
-        // Find and click the toggle button to expand it
-        if (toggleButton.getAttribute('aria-expanded') === 'false') {
-          setTimeout(() => toggleButton.click(), 500);
-        }
-        
-        // Add a highlight effect
-        const targetSection = targetElement.querySelector(sectionSelector);
-        const classesToAdd = ['outline', 'outline-offset-[-3px]', 'outline-blue-500', 'outline-opacity-50'];
-        
-        if (type === 'related') {
-          classesToAdd.push('rounded-b-lg');
-        }
-        
-        targetSection.classList.add(...classesToAdd);
-        setTimeout(() => {
-          targetSection.classList.remove(...classesToAdd);
-        }, 3000);
-      }
     }, 100);
   };
 
@@ -270,18 +230,20 @@ export function StructuredDataCard({
 
       {/* Outgoing References */}
       {outgoingSnippets.length > 0 && (
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100">
+        <div className="p-4 bg-slate-50 border-b border-slate-100">
           <button
             onClick={() => setShowOutgoingReferences(!showOutgoingReferences)}
-            className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors mb-3"
+            className="flex items-center w-full justify-between text-slate-700 hover:text-slate-900 transition-colors mb-3"
           >
+            <div className="flex items-center space-x-2 text-sm font-medium">
+              <ArrowRight className="w-4 h-4" />
+              <span>References ({outgoingSnippets.length})</span>
+            </div>
             {showOutgoingReferences ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
-            <ArrowRight className="w-4 h-4" />
-            <span>References ({outgoingSnippets.length})</span>
           </button>
           {showOutgoingReferences && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -327,18 +289,20 @@ export function StructuredDataCard({
 
       {/* Incoming References */}
       {incomingSnippets.length > 0 && (
-        <div className="px-6 py-4 bg-blue-50 border-t border-slate-100">
+        <div className="p-4 bg-blue-50 border-t border-slate-100">
           <button
             onClick={() => setShowIncomingReferences(!showIncomingReferences)}
-            className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors mb-3"
+            className="flex items-center w-full justify-between text-slate-700 hover:text-slate-900 transition-colors mb-3"
           >
+            <div className="flex items-center space-x-2 text-sm font-medium">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Referenced By ({incomingSnippets.length})</span>
+            </div>
             {showIncomingReferences ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
-            <ArrowLeft className="w-4 h-4" />
-            <span>Referenced By ({incomingSnippets.length})</span>
           </button>
           {showIncomingReferences && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

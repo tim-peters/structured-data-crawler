@@ -195,15 +195,17 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
         <div className="px-6 py-4 bg-slate-50 border-b border-slate-100">
           <button
             onClick={() => setShowOutgoingReferences(!showOutgoingReferences)}
-            className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+            className="flex items-center w-full justify-between text-slate-700 hover:text-slate-900 transition-colors mb-3"
           >
+            <div className="flex items-center space-x-2 text-sm font-medium">
+              <ArrowRight className="w-4 h-4" />
+              <span>References ({outgoingSnippets.length})</span>
+            </div>
             {showOutgoingReferences ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
-            <ArrowRight className="w-4 h-4" />
-            <span>References ({outgoingSnippets.length})</span>
           </button>
 
           {showOutgoingReferences && (
@@ -253,15 +255,17 @@ export function StructuredDataSnippetCard({ snippet, allSnippets, currentFormatF
         <div className="px-6 py-4 bg-blue-50 border-t border-slate-100">
           <button
             onClick={() => setShowIncomingReferences(!showIncomingReferences)}
-            className="flex items-center space-x-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors mb-3"
+            className="flex items-center w-full justify-between text-slate-700 hover:text-slate-900 transition-colors mb-3"
           >
+            <div className="flex items-center space-x-2 text-sm font-medium">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Referenced By ({incomingSnippets.length})</span>
+            </div>
             {showIncomingReferences ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
-            <ArrowLeft className="w-4 h-4" />
-            <span>Referenced By ({incomingSnippets.length})</span>
           </button>
           {showIncomingReferences && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
