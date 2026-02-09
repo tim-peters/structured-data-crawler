@@ -97,7 +97,7 @@ const CORS_PROXIES = [
   'https://corsproxy.io/?'
 ];
 
-async function fetchWithCorsHandling(url: string, timeout: number = 10000): Promise<string> {
+async function fetchWithCorsHandling(url: string, timeout: number = 10000, allowNonHtml: boolean = false): Promise<string> {
   const urlObj = new URL(url);
   const domain = urlObj.hostname;
   
@@ -129,7 +129,7 @@ async function fetchWithCorsHandling(url: string, timeout: number = 10000): Prom
     }
 
     const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('text/html')) {
+    if (!allowNonHtml && !contentType.includes('text/html')) {
       throw new Error('Response is not HTML');
     }
 
@@ -211,8 +211,10 @@ export async function crawlDomain(
   const { onProgress, onData, signal } = callbacks;
 
   // Always use HTTPS for the main crawl target
-  const baseDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '');
-  const baseUrl = normalizeUrl(`https://${baseDomain}`, baseDomain);
+  const domainWithoutProtocol = domain.replace(/^https?:\/\//, '').replace(/^www\./, '');
+  // Extract just the hostname (remove any path)
+  const baseDomain = domainWithoutProtocol.split('/')[0];
+  const baseUrl = normalizeUrl(`https://${domainWithoutProtocol}`, baseDomain);
   const urlObj = new URL(baseUrl);
 
   const state: CrawlState = {
@@ -228,7 +230,7 @@ export async function crawlDomain(
     try {
       const robotsUrl = `${urlObj.protocol}//${urlObj.host}/robots.txt`;
       try {
-        const robotsText = await fetchWithCorsHandling(robotsUrl, 5000);
+        const robotsText = await fetchWithCorsHandling(robotsUrl, 5000, true);
         state.robotsRules = parseRobotsTxt(robotsText);
       } catch (err) {
         // If robots.txt fails, continue without it
@@ -310,28 +312,40 @@ function extractLinks(html: string, baseUrl: string, baseDomain: string): string
   const linkRegex = /(?:href|src)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>"']+))/gi;
   const links: string[] = [];
   let match: RegExpExecArray | null;
+  let totalMatches = 0;
+  let filteredByExtension = 0;
+  let filteredByProtocol = 0;
+  let filteredByDomain = 0;
+  let invalidUrls = 0;
 
   // File extensions that typically don't contain links
   const nonLinkExtensions = [
     '.css', '.js', '.csv', 
     '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
     '.zip', '.rar', '.7z', '.tar', '.gz',
-    '.jpg', '.jpeg', '.png', 'svg', '.gif', '.bmp', '.svg', '.webp', '.ico',
+    '.jpg', '.jpeg', '.png', '.svg', '.gif', '.bmp', '.webp', '.ico',
     '.mp3', '.mp4', '.wav', '.avi', '.mov', '.wmv',
     '.ttf', '.woff', '.woff2', '.eot', '.otf'
   ];
 
   while ((match = linkRegex.exec(html)) !== null) {
+    totalMatches++;
     const url = match[1] || match[2] || match[3];
     if (!url) continue;
     
     // Ignore anchors and javascript
-    if (url.startsWith('#') || url.startsWith('mailto:') || url.startsWith('javascript:') || url.startsWith('tel:')) continue;
+    if (url.startsWith('#') || url.startsWith('mailto:') || url.startsWith('javascript:') || url.startsWith('tel:')) {
+      filteredByProtocol++;
+      continue;
+    }
     
     // Check if URL has a file extension that doesn't contain links
     const urlLower = url.toLowerCase();
     const hasNonLinkExtension = nonLinkExtensions.some(ext => urlLower.endsWith(ext));
-    if (hasNonLinkExtension) continue;
+    if (hasNonLinkExtension) {
+      filteredByExtension++;
+      continue;
+    }
     
     // Normalize relative URLs
     let absoluteUrl = url;
@@ -339,6 +353,7 @@ function extractLinks(html: string, baseUrl: string, baseDomain: string): string
       absoluteUrl = new URL(url, baseUrl).href;
     } catch {
       // skip invalid URLs
+      invalidUrls++;
       continue;
     }
     
@@ -347,11 +362,26 @@ function extractLinks(html: string, baseUrl: string, baseDomain: string): string
       const linkDomain = new URL(absoluteUrl).hostname.replace(/^www\./, '');
       if (linkDomain === baseDomain) {
         links.push(absoluteUrl);
+      } else {
+        filteredByDomain++;
+        console.log(`Filtered by domain: ${linkDomain} !== ${baseDomain} (URL: ${absoluteUrl})`);
       }
     } catch {
+      invalidUrls++;
       continue;
     }
   }
+
+  console.log(`Link extraction stats for ${baseUrl}:`, {
+    totalMatches,
+    filteredByProtocol,
+    filteredByExtension,
+    filteredByDomain,
+    invalidUrls,
+    linksFound: links.length,
+    baseDomain,
+    sampleLinks: links.slice(0, 5)
+  });
 
   // Remove duplicates
   return Array.from(new Set(links));
