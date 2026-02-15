@@ -39,6 +39,47 @@ function extractId(data: any): string | undefined {
          undefined;
 }
 
+function resolveJsonLdType(item: any): string {
+  const itemType = item?.['@type'];
+
+  if (Array.isArray(itemType)) {
+    return itemType.filter(Boolean).join(', ') || 'Unknown';
+  }
+
+  if (typeof itemType === 'string' && itemType.trim()) {
+    return itemType;
+  }
+
+  return 'Unknown';
+}
+
+function flattenJsonLdItems(data: any): any[] {
+  if (!data || typeof data !== 'object') {
+    return [];
+  }
+
+  if (Array.isArray(data)) {
+    return data.flatMap(item => flattenJsonLdItems(item));
+  }
+
+  if (Array.isArray(data['@graph'])) {
+    return data['@graph'].flatMap((graphItem: any) => {
+      if (!graphItem || typeof graphItem !== 'object') {
+        return [];
+      }
+
+      const mergedItem = {
+        ...graphItem,
+        ...(data['@context'] && !graphItem['@context'] ? { '@context': data['@context'] } : {})
+      };
+
+      return flattenJsonLdItems(mergedItem);
+    });
+  }
+
+  return [data];
+}
+
 function extractJsonLd(html: string, url: string): StructuredDataItem[] {
   const results: StructuredDataItem[] = [];
   const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>(.*?)<\/script>/gis;
@@ -50,10 +91,8 @@ function extractJsonLd(html: string, url: string): StructuredDataItem[] {
       if (!jsonContent) continue;
       
       const data = JSON.parse(jsonContent);
-      
-      // Handle arrays of structured data
-      const items = Array.isArray(data) ? data : [data];
-      
+      const items = flattenJsonLdItems(data);
+
       items.forEach(item => {
         if (item && typeof item === 'object') {
           const hash = generateDataHash(item);
@@ -62,7 +101,7 @@ function extractJsonLd(html: string, url: string): StructuredDataItem[] {
           results.push({
             url,
             format: 'JSON-LD',
-            type: item['@type'] || (item['@graph'] ? 'Graph' : 'Unknown'),
+            type: resolveJsonLdType(item),
             data: item,
             id,
             hash
